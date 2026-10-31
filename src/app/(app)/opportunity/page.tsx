@@ -1,2 +1,48 @@
-import { requireUser } from "@/lib/auth";import { OpportunityCreator } from "@/components/opportunity-creator";
-export default async function OpportunityPage(){const {supabase,userId}=await requireUser();const [{data:ops},{data:rising},{data:proofSummary}]=await Promise.all([supabase.from('opportunities').select('*').eq('status','open').order('created_at',{ascending:false}).limit(30),supabase.from('public_team_momentum').select('*').order('momentum_score',{ascending:false}).limit(10),supabase.from('public_proof_summary').select('*').limit(10)]);return <><div className="section"><div className="kicker">OPPORTUNITY / SCOUT</div><h1>살아온 것이<br/>바로 기회가 된다.</h1><p>개인은 맞는 기회를 발견하고, 기업은 이력서가 아니라 실제 궤적과 Proof로 사람을 찾습니다.</p><div style={{marginTop:14}}><OpportunityCreator userId={userId}/></div></div><div className="tabs"><span className="pill active">나에게 맞는 기회</span><span className="pill">Rising Teams</span><span className="pill">Scout</span></div>{ops?.length?ops.map((o:any)=><div className="card" key={o.id}><div className="kicker">{String(o.domain).toUpperCase()} · {String(o.kind).toUpperCase()}</div><h2>{o.title}</h2><div className="meta">{o.organization_name}{o.verified_organization?' · VERIFIED':''}</div><p>{o.description}</p><div className="badges"><span className="badge">Verified Proof {o.minimum_verified_proofs}+</span><span className="badge">TEAM {o.minimum_team_months}mo+</span></div><button className="btn primary full" style={{marginTop:12}}>기회 보기</button></div>):<div className="empty"><h3>아직 열린 기회가 없습니다.</h3><p>기회가 등록되면 당신의 Proof와 방향을 기준으로 여기에 연결됩니다.</p></div>}{rising?.length?<><div className="section"><div className="kicker">RISING TEAMS</div><h1 style={{fontSize:27}}>누가 유명한가보다,<br/>누가 지금 움직이는가.</h1></div>{rising.map((t:any)=><div className="card" key={t.team_id}><div className="row"><div className="grow"><h3>{t.name}</h3><div className="meta">{String(t.domain).toUpperCase()}</div></div><div className="score">{Math.round(t.momentum_score||0)}</div></div><div className="badges"><span className="badge">Proof {t.proof_count_30d}</span><span className="badge">Verified {t.verified_proof_count_30d}</span><span className="badge">Continuity {t.continuity_months}mo</span></div></div>)}</>:null}{proofSummary?.length?<div className="card"><div className="kicker">SCOUT DATA READY</div><h3>Evidence Search</h3><p>현재 공개 Proof Summary가 {proofSummary.length}개 인재에 대해 준비되어 있습니다.</p></div>:null}</>}
+import { requireUser } from "@/lib/auth";
+import { OpportunityCreator } from "@/components/opportunity-creator";
+
+export default async function OpportunityPage() {
+  const { supabase, userId } = await requireUser();
+  const [{ data: ops }, { data: rising }, { data: proofSummary }] = await Promise.all([
+    supabase.from("opportunities").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(30),
+    supabase.from("public_team_momentum").select("*").order("momentum_score", { ascending: false }).limit(10),
+    supabase.from("public_proof_summary").select("*").limit(10),
+  ]);
+
+  return (
+    <>
+      <section className="page-hero">
+        <div className="page-hero-top">
+          <div><div className="eyebrow">OPPORTUNITY / SCOUT</div><h1>살아온 것이<br />바로 기회가 된다.</h1></div>
+          <OpportunityCreator userId={userId} />
+        </div>
+        <p>개인은 맞는 기회를 발견하고, 기업은 이력서가 아니라 실제 궤적과 Proof로 사람을 찾습니다.</p>
+      </section>
+
+      <div className="tabs"><span className="pill active">추천 기회</span><span className="pill">Rising Teams</span><span className="pill">Scout</span></div>
+
+      {ops?.length ? ops.map((o: any) => (
+        <div className="card" key={o.id}>
+          <div className="kicker">{String(o.domain).toUpperCase()} · {String(o.kind).toUpperCase()}</div>
+          <h2>{o.title}</h2>
+          <div className="meta">{o.organization_name}{o.verified_organization ? " · VERIFIED" : ""}</div>
+          <p>{o.description}</p>
+          <div className="badges"><span className="badge">Verified Proof {o.minimum_verified_proofs}+</span><span className="badge">TEAM {o.minimum_team_months}mo+</span></div>
+          <button className="btn primary full" style={{ marginTop: 14 }}>기회 보기</button>
+        </div>
+      )) : <div className="empty"><h3>아직 열린 기회가 없습니다.</h3><p>기회가 등록되면 당신의 Proof와 방향을 기준으로 여기에 연결됩니다.</p></div>}
+
+      {rising?.length ? <>
+        <section className="section"><div className="kicker">RISING TEAMS</div><h1 style={{ fontSize: 28 }}>누가 유명한가보다,<br />누가 지금 움직이는가.</h1></section>
+        {rising.map((t: any) => (
+          <div className="card" key={t.team_id}>
+            <div className="row"><div className="grow"><h3>{t.name}</h3><div className="meta">{String(t.domain).toUpperCase()}</div></div><div className="score">{Math.round(t.momentum_score || 0)}</div></div>
+            <div className="badges"><span className="badge">Proof {t.proof_count_30d}</span><span className="badge">Verified {t.verified_proof_count_30d}</span><span className="badge">Continuity {t.continuity_months}mo</span></div>
+          </div>
+        ))}
+      </> : null}
+
+      {proofSummary?.length ? <div className="card"><div className="kicker">SCOUT DATA READY</div><h3>Evidence Search</h3><p>현재 공개 Proof Summary가 {proofSummary.length}개 인재에 대해 준비되어 있습니다.</p></div> : null}
+    </>
+  );
+}
