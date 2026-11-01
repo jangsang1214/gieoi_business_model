@@ -19,13 +19,13 @@ function NavIcon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.4-4.5 2.8-7 6.5-7s6.1 2.5 6.5 7"/></svg>;
 }
 
-function ActiveLink({ href, label, icon, compact = false }: { href: string; label: string; icon: string; compact?: boolean }) {
+function ActiveLink({ href, label, icon }: { href: string; label: string; icon: string }) {
   const path = usePathname();
   const active = href === "/" ? path === "/" : path.startsWith(href);
   return (
     <Link href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
       <span className="nav-icon"><NavIcon name={icon} /></span>
-      {!compact && <span>{label}</span>}
+      <span>{label}</span>
     </Link>
   );
 }
@@ -40,6 +40,7 @@ export function DesktopNav() {
           return <Link key={href} href={href} className={active ? "active" : ""}><span className="nav-icon"><NavIcon name={icon} /></span><span>{label}</span></Link>;
         })}
       </nav>
+      <div className="rail-spacer" />
       <div className="rail-bottom">
         <Link href="/settings" className={path.startsWith("/settings") ? "active" : ""}>
           <span className="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.08-1l2-1.55-2-3.46-2.46.99a7 7 0 0 0-1.72-1L14.4 3h-4.8l-.34 2.98a7 7 0 0 0-1.72 1L5.08 6l-2 3.46L5.08 11A7 7 0 0 0 5 12c0 .34.03.68.08 1l-2 1.55 2 3.46 2.46-.99a7 7 0 0 0 1.72 1L9.6 21h4.8l.34-2.98a7 7 0 0 0 1.72-1l2.46.99 2-3.46L18.92 13c.05-.32.08-.66.08-1Z"/></svg></span>
