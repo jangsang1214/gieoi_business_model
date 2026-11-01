@@ -13,10 +13,6 @@ function friendly(message: string) {
   return "잠시 문제가 생겼습니다. 다시 시도해주세요.";
 }
 
-function MailIcon() {
-  return <span className="input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6.5h16v11H4z"/><path d="m5 8 7 5 7-5"/></svg></span>;
-}
-
 export function LoginForm() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
@@ -71,51 +67,51 @@ export function LoginForm() {
 
   return (
     <div className="auth-panel">
-      <div className="auth-tabs" role="tablist" aria-label="로그인 방식">
-        <button type="button" className={mode === "login" ? "active" : ""} onClick={() => changeMode("login")}>로그인</button>
-        <button type="button" className={mode === "signup" ? "active" : ""} onClick={() => changeMode("signup")}>가입하기</button>
-      </div>
-
       <form onSubmit={submit} className="auth-form">
         {mode === "signup" && (
-          <label className="field auth-field">
+          <label className="auth-field">
             <span>이름</span>
-            <div className="auth-input-wrap">
-              <input name="name" required autoComplete="name" placeholder="이름" />
-            </div>
+            <input name="name" required autoComplete="name" placeholder="이름" />
           </label>
         )}
 
-        <label className="field auth-field">
+        <label className="auth-field">
           <span>이메일</span>
-          <div className="auth-input-wrap">
-            <input name="email" type="email" inputMode="email" autoComplete="email" required placeholder="이메일" />
-            <MailIcon />
-          </div>
+          <input name="email" type="email" inputMode="email" autoComplete="email" required placeholder="이메일" />
         </label>
 
-        <label className="field auth-field">
+        <label className="auth-field">
           <span>비밀번호</span>
-          <div className="auth-input-wrap">
-            <input name="password" type={showPassword ? "text" : "password"} minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} required placeholder="비밀번호" />
-            <button className="password-toggle" type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>{showPassword ? "숨기기" : "보기"}</button>
+          <div className="auth-password">
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              minLength={6}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              required
+              placeholder="비밀번호"
+            />
+            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>
+              {showPassword ? "숨기기" : "보기"}
+            </button>
           </div>
         </label>
 
         {msg && <div className={ok ? "success auth-message" : "error auth-message"}>{msg}</div>}
 
-        <button className="btn primary full auth-submit" disabled={loading}>
+        <button className="auth-submit" disabled={loading}>
           {loading ? "확인 중..." : mode === "login" ? "로그인" : "계정 만들기"}
         </button>
       </form>
 
-      <div className="auth-divider">GIEOI</div>
       <div className="auth-switch">
-        {mode === "login" ? "처음이신가요?" : "이미 계정이 있나요?"}
-        <button type="button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>{mode === "login" ? "가입하기" : "로그인"}</button>
+        <span>{mode === "login" ? "기어이가 처음인가요?" : "이미 계정이 있나요?"}</span>
+        <button type="button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>
+          {mode === "login" ? "가입하기" : "로그인"}
+        </button>
       </div>
 
-      <div className="auth-footnote">계속하면 기어이의 이용약관 및 개인정보 처리방침에 동의하게 됩니다.</div>
+      <p className="auth-footnote">계속하면 기어이의 이용약관 및 개인정보 처리방침에 동의하게 됩니다.</p>
     </div>
   );
 }
