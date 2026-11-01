@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { FeedPrompt } from "@/components/feed-prompt";
 
 export default async function Home() {
   const { supabase } = await requireUser();
@@ -10,13 +11,14 @@ export default async function Home() {
 
   return (
     <>
-      <section className="page-hero">
-        <div className="eyebrow">FOR YOU</div>
-        <h1>살아가는 사람들의<br />지금.</h1>
-        <p>완성된 결과보다, 그곳까지 가는 사람들의 오늘을 봅니다.</p>
-      </section>
+      <header className="utility-head feed-head">
+        <div><h1>홈</h1><p>실제로 움직이는 사람들의 오늘.</p></div>
+        <span className="live-mark"><i /> LIVE TRAJECTORY</span>
+      </header>
 
-      <div className="tabs">
+      <FeedPrompt />
+
+      <div className="tabs feed-tabs">
         <span className="pill active">For You</span>
         <span className="pill">BUSINESS</span>
         <span className="pill">WORKOUT</span>
@@ -27,16 +29,17 @@ export default async function Home() {
       </div>
 
       {!records?.length ? (
-        <div className="empty">
-          <h3>첫 장면을 남겨보세요.</h3>
-          <p>오른쪽 아래 + 버튼에서 LIFE, JOURNEY, PROOF를 기록하면 당신의 Trajectory가 시작됩니다.</p>
+        <div className="empty feed-empty">
+          <h3>아직 피드가 조용합니다.</h3>
+          <p>첫 기록을 남기거나 탐색에서 실제로 움직이는 사람과 TEAM을 발견해보세요.</p>
+          <a href="/explore" className="inline-action">탐색으로 이동 →</a>
         </div>
       ) : records.map((r: any) => (
-        <article className="post" key={r.id}>
+        <article className="post social-post" key={r.id}>
           <div className="post-head">
             <div className="avatar">{String(r.profiles?.display_name || "나").slice(0, 1)}</div>
             <div className="grow">
-              <b>{r.profiles?.display_name || r.profiles?.handle || "기어이 사용자"}</b>
+              <div className="post-user-line"><b>{r.profiles?.display_name || r.profiles?.handle || "기어이 사용자"}</b>{r.profiles?.handle && <span>@{r.profiles.handle}</span>}</div>
               <div className="meta">{new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div>
             </div>
             <div className="type-tag">{String(r.domain).toUpperCase()}<span>{String(r.type).toUpperCase()}</span></div>
@@ -48,7 +51,11 @@ export default async function Home() {
               {r.teams?.name && <span className="chip">TEAM · {r.teams.name}</span>}
             </div>
           </div>
-          <div className="post-actions"><button>존중</button><button>응원</button><button>함께하기</button></div>
+          <div className="post-actions social-actions">
+            <button aria-label="존중">♡ <span>존중</span></button>
+            <button aria-label="댓글">○ <span>댓글</span></button>
+            <button aria-label="공유">↗ <span>공유</span></button>
+          </div>
         </article>
       ))}
     </>

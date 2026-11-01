@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import "./product.css";
+import "./v2.css";
 
 const sans = Noto_Sans_KR({
   variable: "--font-gieoi-sans",
