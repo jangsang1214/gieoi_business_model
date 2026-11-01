@@ -8,7 +8,6 @@ export function AppShell({ children, userId }: { children: React.ReactNode; user
       <aside className="desktop-rail">
         <Link href="/" className="rail-brand" aria-label="기어이 홈">기어이.</Link>
         <DesktopNav />
-        <div className="rail-spacer" />
         <p className="rail-note">Proof of Trajectory.<br />살아온 것이 당신을 보여주도록.</p>
       </aside>
 
