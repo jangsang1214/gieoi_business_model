@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,6 +16,16 @@ export function RecordComposer({ userId }: { userId: string }) {
   const [err, setErr] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const openComposer = (event: Event) => {
+      const detail = (event as CustomEvent<{ type?: string }>).detail;
+      if (detail?.type && types.includes(detail.type)) setType(detail.type);
+      setOpen(true);
+    };
+    window.addEventListener("gieoi:compose", openComposer);
+    return () => window.removeEventListener("gieoi:compose", openComposer);
+  }, []);
 
   if (pathname.startsWith("/settings")) return null;
 
