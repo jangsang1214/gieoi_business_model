@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { TeamApplyButton } from "@/components/team-apply-button";
 import { TeamGoalForm } from "@/components/team-goal-form";
 import { TeamRoleCreator } from "@/components/team-role-creator";
+import { TeamApplicationReview } from "@/components/team-application-review";
+import { ComposeLinkButton } from "@/components/compose-link-button";
 
 export default async function TeamDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,7 +43,7 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
 
     <section className="discover-section">
       <div className="section-title-row"><div><span>NOW</span><h2>지금 함께 해내는 것</h2></div>{isOwner && <div className="row"><TeamGoalForm teamId={id} userId={userId} domain={team.domain} /><TeamRoleCreator teamId={id} /></div>}</div>
-      {goals?.length ? <div className="profile-goal-grid">{goals.map((g: any) => <article className="profile-goal" key={g.id}><div className="mini-label">GOAL</div><h3>{g.title}</h3><p>{g.why}</p>{g.target_date && <div className="goal-foot"><span>목표일</span><span>{new Date(g.target_date).toLocaleDateString("ko-KR")}</span></div>}</article>)}</div> : <div className="compact-empty">아직 TEAM Goal이 없습니다.</div>}
+      {goals?.length ? <div className="profile-goal-grid">{goals.map((g: any) => <article className="profile-goal" key={g.id}><div className="mini-label">GOAL</div><h3>{g.title}</h3><p>{g.why}</p><div className="goal-inline-actions"><ComposeLinkButton goalId={g.id} teamId={id} label="기록" /><ComposeLinkButton goalId={g.id} teamId={id} proof label="Proof" /></div>{g.target_date && <div className="goal-foot"><span>목표일</span><span>{new Date(g.target_date).toLocaleDateString("ko-KR")}</span></div>}</article>)}</div> : <div className="compact-empty">아직 TEAM Goal이 없습니다.</div>}
     </section>
 
     <section className="discover-section">
@@ -55,15 +57,15 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
     </section>
 
     <section className="discover-section">
-      <div className="section-title-row"><div><span>TRAJECTORY</span><h2>TEAM의 궤적</h2></div></div>
+      <div className="section-title-row"><div><span>TRAJECTORY</span><h2>TEAM의 궤적</h2></div><ComposeLinkButton teamId={id} label="기록 남기기" /></div>
       {records?.length ? <div className="trajectory-list">{records.map((r:any)=><article className="trajectory-event" key={r.id}><div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""}/><span/></div><div className="trajectory-content"><div className="trajectory-meta">{String(r.type).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p></div></article>)}</div> : <div className="compact-empty">TEAM에 연결된 기록이 쌓이면 여기에 나타납니다.</div>}
     </section>
 
     <section className="discover-section">
-      <div className="section-title-row"><div><span>PROOF</span><h2>함께 남긴 결과</h2></div></div>
+      <div className="section-title-row"><div><span>PROOF</span><h2>함께 남긴 결과</h2></div><ComposeLinkButton teamId={id} proof label="Proof 남기기" /></div>
       {proofs?.length ? <div className="discovery-stack">{proofs.map((p:any)=><article className="evidence-row" key={p.id}><div><div className="mini-label">{String(p.domain).toUpperCase()}</div><h3>{p.title}</h3><p>{p.description}</p></div><span className="stage-pill">{new Date(p.happened_at).toLocaleDateString("ko-KR")}</span></article>)}</div> : <div className="compact-empty">아직 TEAM Proof가 없습니다.</div>}
     </section>
 
-    {isOwner && applications?.length ? <section className="discover-section"><div className="section-title-row"><div><span>APPLICATIONS</span><h2>지원</h2></div></div><div className="discovery-stack">{applications.map((a:any)=>{const p=pmap.get(a.applicant_id);const role=roleMap.get(a.role_id);return <article className="evidence-row" key={a.id}><div><h3>{p?.display_name || "지원자"}</h3><p>{role?.title || "TEAM"} · {a.status}</p></div><Link className="btn secondary" href={`/profile/${a.applicant_id}`}>프로필</Link></article>})}</div></section> : null}
+    {isOwner && applications?.length ? <section className="discover-section"><div className="section-title-row"><div><span>APPLICATIONS</span><h2>지원</h2></div></div><div className="discovery-stack">{applications.map((a:any)=>{const p=pmap.get(a.applicant_id);const role=roleMap.get(a.role_id);return <article className="evidence-row" key={a.id}><div><h3>{p?.display_name || "지원자"}</h3><p>{role?.title || "TEAM"} · {a.status}</p></div><div className="application-review-wrap"><Link className="btn secondary" href={`/profile/${a.applicant_id}`}>프로필</Link>{a.status === "pending" && <TeamApplicationReview applicationId={a.id} teamId={id} applicantId={a.applicant_id} roleName={role?.title || "Member"} />}</div></article>})}</div></section> : null}
   </>;
 }
