@@ -1,44 +1,57 @@
 import { requireUser } from "@/lib/auth";
 import { TeamCreator } from "@/components/team-creator";
 import { TeamApplyButton } from "@/components/team-apply-button";
+import { RecommendationActions } from "@/components/recommendation-actions";
 import { directionMatch } from "@/lib/match";
 
 export default async function TeamPage() {
   const { supabase, userId } = await requireUser();
-  const [{ data: teams }, { data: mine }, { data: td }] = await Promise.all([
+  const [{ data: teams }, { data: mine }, { data: td }, { data: feedback }] = await Promise.all([
     supabase.from("teams").select("id,name,mission,domain,current_stage,owner_id,team_members(count),team_roles(title,is_open)").eq("discoverable", true).limit(30),
     supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("team_direction_profiles").select("*"),
+    supabase.from("recommendation_feedback").select("target_id,state").eq("user_id", userId).eq("target_type", "team"),
   ]);
+
   const tmap = new Map((td ?? []).map((x: any) => [x.team_id, x]));
+  const fmap = new Map((feedback ?? []).map((x: any) => [x.target_id, x.state]));
+  const visibleTeams = (teams ?? []).filter((t: any) => fmap.get(t.id) !== "dismissed");
 
   return (
     <>
-      <section className="page-hero">
-        <div className="page-hero-top">
-          <div><div className="eyebrow">TEAM / DIRECTION MATCH</div><h1>같이 좋아하는 사람보다,<br />같이 갈 사람.</h1></div>
-          <TeamCreator userId={userId} />
+      <header className="utility-head team-head-simple">
+        <div>
+          <h1>TEAM</h1>
+          <p>지금 같이 움직일 사람들을 찾습니다.</p>
         </div>
-        <p>Goal, Proof, 역량과 활동 리듬을 비교해 실제로 함께 움직일 TEAM을 발견합니다.</p>
-      </section>
+        <TeamCreator userId={userId} />
+      </header>
 
-      {!teams?.length ? (
-        <div className="empty"><h3>아직 발견할 TEAM이 없습니다.</h3><p>첫 TEAM을 만들면 그 Journey와 Proof가 사람을 모으기 시작합니다.</p></div>
-      ) : teams.map((t: any) => {
+      {!visibleTeams.length ? (
+        <div className="empty"><h3>아직 추천할 TEAM이 없습니다.</h3><p>당신의 활동과 TEAM 데이터가 쌓이면 더 잘 맞는 팀이 여기에 나타납니다.</p></div>
+      ) : visibleTeams.map((t: any) => {
         const m = directionMatch(mine, tmap.get(t.id) ?? null);
+        const openRoles = (t.team_roles || []).filter((r: any) => r.is_open).map((r: any) => r.title).slice(0, 3);
         return (
-          <div className="card" key={t.id}>
-            <div className="row">
-              <div className="grow"><div className="kicker">{String(t.domain).toUpperCase()}</div><h2>{t.name}</h2><div className="meta">{t.current_stage || "Moving"}</div></div>
-              {m && <div className="score">{m.total}<span style={{fontSize:10,color:"var(--muted2)"}}>%</span></div>}
+          <article className="match-card" key={t.id}>
+            <div className="match-card-top">
+              <div className="grow">
+                <div className="mini-label">{String(t.domain).toUpperCase()}</div>
+                <h2>{t.name}</h2>
+              </div>
+              {m && <span className="match-badge">{m.total}%</span>}
             </div>
-            <p>{t.mission}</p>
-            {m && <div className="reason"><b>왜 추천됐나요?</b><ul><li>미래 방향 {m.future}%</li><li>Proof 깊이 {m.proof}%</li><li>보완 역량 {m.complement}%</li><li>활동 리듬 {m.rhythm}%</li></ul></div>}
-            <div className="row" style={{ marginTop: 14 }}>
-              {t.owner_id !== userId ? <TeamApplyButton teamId={t.id} userId={userId} /> : <span className="badge">내 TEAM</span>}
-              <span className="badge">{t.team_members?.[0]?.count ?? 0} PEOPLE</span>
+            <p className="match-mission">{t.mission}</p>
+            <div className="match-meta">
+              <span>{t.current_stage || "Moving"}</span>
+              <span>{t.team_members?.[0]?.count ?? 0}명</span>
+              {openRoles.length > 0 && <span>{openRoles.join(" · ")} 모집</span>}
             </div>
-          </div>
+            <div className="match-card-actions">
+              <div>{t.owner_id !== userId ? <TeamApplyButton teamId={t.id} userId={userId} /> : <span className="badge">내 TEAM</span>}</div>
+              {t.owner_id !== userId && <RecommendationActions userId={userId} targetType="team" targetId={t.id} initialState={(fmap.get(t.id) as "saved" | "dismissed" | undefined) ?? null} />}
+            </div>
+          </article>
         );
       })}
     </>

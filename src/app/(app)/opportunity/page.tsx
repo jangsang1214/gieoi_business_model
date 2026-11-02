@@ -1,48 +1,60 @@
 import { requireUser } from "@/lib/auth";
 import { OpportunityCreator } from "@/components/opportunity-creator";
+import { RecommendationActions } from "@/components/recommendation-actions";
+import { opportunityMatch } from "@/lib/match";
 
 export default async function OpportunityPage() {
   const { supabase, userId } = await requireUser();
-  const [{ data: ops }, { data: rising }, { data: proofSummary }] = await Promise.all([
+  const [{ data: ops }, { data: rising }, { data: mine }, { data: feedback }] = await Promise.all([
     supabase.from("opportunities").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(30),
-    supabase.from("public_team_momentum").select("*").order("momentum_score", { ascending: false }).limit(10),
-    supabase.from("public_proof_summary").select("*").limit(10),
+    supabase.from("public_team_momentum").select("*").order("momentum_score", { ascending: false }).limit(8),
+    supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
+    supabase.from("recommendation_feedback").select("target_id,state").eq("user_id", userId).eq("target_type", "opportunity"),
   ]);
+
+  const fmap = new Map((feedback ?? []).map((x: any) => [x.target_id, x.state]));
+  const visibleOps = (ops ?? []).filter((o: any) => fmap.get(o.id) !== "dismissed");
 
   return (
     <>
-      <section className="page-hero">
-        <div className="page-hero-top">
-          <div><div className="eyebrow">OPPORTUNITY / SCOUT</div><h1>살아온 것이<br />바로 기회가 된다.</h1></div>
-          <OpportunityCreator userId={userId} />
+      <header className="utility-head opportunity-head-simple">
+        <div>
+          <h1>기회</h1>
+          <p>당신이 해온 것과 맞는 다음 기회를 찾습니다.</p>
         </div>
-        <p>개인은 맞는 기회를 발견하고, 기업은 이력서가 아니라 실제 궤적과 Proof로 사람을 찾습니다.</p>
-      </section>
+        <OpportunityCreator userId={userId} />
+      </header>
 
-      <div className="tabs"><span className="pill active">추천 기회</span><span className="pill">Rising Teams</span><span className="pill">Scout</span></div>
+      {visibleOps.length ? <section className="match-list">{visibleOps.map((o: any) => {
+        const match = opportunityMatch(mine, o);
+        return (
+          <article className="match-card" key={o.id}>
+            <div className="match-card-top">
+              <div className="grow">
+                <div className="mini-label">{String(o.domain).toUpperCase()} · {String(o.kind).toUpperCase()}</div>
+                <h2>{o.title}</h2>
+                <div className="match-org">{o.organization_name}{o.verified_organization ? " · Verified" : ""}</div>
+              </div>
+              {match && <span className="match-badge">{match.total}%</span>}
+            </div>
+            <p className="match-mission">{o.description}</p>
+            <div className="match-card-actions">
+              <button className="btn primary">기회 보기</button>
+              <RecommendationActions userId={userId} targetType="opportunity" targetId={o.id} initialState={(fmap.get(o.id) as "saved" | "dismissed" | undefined) ?? null} />
+            </div>
+          </article>
+        );
+      })}</section> : <div className="empty"><h3>아직 추천할 기회가 없습니다.</h3><p>활동과 기회 데이터가 쌓이면 더 잘 맞는 제안이 이곳에 나타납니다.</p></div>}
 
-      {ops?.length ? ops.map((o: any) => (
-        <div className="card" key={o.id}>
-          <div className="kicker">{String(o.domain).toUpperCase()} · {String(o.kind).toUpperCase()}</div>
-          <h2>{o.title}</h2>
-          <div className="meta">{o.organization_name}{o.verified_organization ? " · VERIFIED" : ""}</div>
-          <p>{o.description}</p>
-          <div className="badges"><span className="badge">Verified Proof {o.minimum_verified_proofs}+</span><span className="badge">TEAM {o.minimum_team_months}mo+</span></div>
-          <button className="btn primary full" style={{ marginTop: 14 }}>기회 보기</button>
-        </div>
-      )) : <div className="empty"><h3>아직 열린 기회가 없습니다.</h3><p>기회가 등록되면 당신의 Proof와 방향을 기준으로 여기에 연결됩니다.</p></div>}
-
-      {rising?.length ? <>
-        <section className="section"><div className="kicker">RISING TEAMS</div><h1 style={{ fontSize: 28 }}>누가 유명한가보다,<br />누가 지금 움직이는가.</h1></section>
-        {rising.map((t: any) => (
-          <div className="card" key={t.team_id}>
-            <div className="row"><div className="grow"><h3>{t.name}</h3><div className="meta">{String(t.domain).toUpperCase()}</div></div><div className="score">{Math.round(t.momentum_score || 0)}</div></div>
-            <div className="badges"><span className="badge">Proof {t.proof_count_30d}</span><span className="badge">Verified {t.verified_proof_count_30d}</span><span className="badge">Continuity {t.continuity_months}mo</span></div>
-          </div>
-        ))}
-      </> : null}
-
-      {proofSummary?.length ? <div className="card"><div className="kicker">SCOUT DATA READY</div><h3>Evidence Search</h3><p>현재 공개 Proof Summary가 {proofSummary.length}개 인재에 대해 준비되어 있습니다.</p></div> : null}
+      {rising?.length ? <section className="discover-section opportunity-rising">
+        <div className="section-title-row"><div><span>RISING TEAMS</span><h2>지금 움직이는 TEAM</h2></div></div>
+        <div className="team-discovery-list">{rising.map((t: any) => (
+          <article className="discover-row" key={t.team_id}>
+            <div className="discover-symbol">T</div>
+            <div className="grow"><div className="row-title"><b>{t.name}</b><span>{String(t.domain).toUpperCase()}</span></div><div className="meta">최근 Proof {t.proof_count_30d ?? 0} · {t.continuity_months ?? 0}개월 지속</div></div>
+          </article>
+        ))}</div>
+      </section> : null}
     </>
   );
 }
