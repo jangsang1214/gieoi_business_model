@@ -1,26 +1,18 @@
 "use client";
 
-const recordTypes = [
-  ["life", "LIFE", "오늘의 장면"],
-  ["journey", "JOURNEY", "과정 남기기"],
-  ["proof", "PROOF", "결과 증명"],
-] as const;
-
 export function FeedPrompt() {
-  function open(type: string) {
+  function open(type: "journey" | "proof") {
     window.dispatchEvent(new CustomEvent("gieoi:compose", { detail: { type } }));
   }
 
   return (
-    <section className="feed-prompt">
-      <button className="feed-prompt-main" onClick={() => open("life")}>
+    <section className="feed-prompt feed-prompt-v4">
+      <button className="feed-prompt-main" onClick={() => open("journey")}>
         <span className="prompt-avatar">나</span>
-        <span className="prompt-copy"><b>오늘은 어떤 하루를 남겼나요?</b><small>작은 기록도 당신의 궤적이 됩니다.</small></span>
+        <span className="prompt-copy"><b>기록하기</b><small>지금 하고 있는 것을 남겨보세요.</small></span>
         <span className="prompt-plus">＋</span>
       </button>
-      <div className="prompt-types">
-        {recordTypes.map(([type, label, desc]) => <button key={type} onClick={() => open(type)}><b>{label}</b><span>{desc}</span></button>)}
-      </div>
+      <button className="proof-quick" onClick={() => open("proof")}>Proof로 남기기</button>
     </section>
   );
 }
