@@ -20,30 +20,24 @@ export default async function TeamPage() {
   return (
     <>
       <header className="utility-head team-head-simple">
-        <div>
-          <h1>TEAM</h1>
-          <p>지금 같이 움직일 사람들을 찾습니다.</p>
-        </div>
+        <div><h1>TEAM</h1><p>함께 해낼 사람들.</p></div>
         <TeamCreator userId={userId} />
       </header>
 
       {!visibleTeams.length ? (
-        <div className="empty"><h3>아직 추천할 TEAM이 없습니다.</h3><p>당신의 활동과 TEAM 데이터가 쌓이면 더 잘 맞는 팀이 여기에 나타납니다.</p></div>
+        <div className="empty"><h3>아직 TEAM이 없습니다.</h3><p>무엇을 함께 해낼지 정하면 TEAM을 만들 수 있습니다.</p></div>
       ) : visibleTeams.map((t: any) => {
         const m = directionMatch(mine, tmap.get(t.id) ?? null);
         const openRoles = (t.team_roles || []).filter((r: any) => r.is_open).map((r: any) => r.title).slice(0, 3);
         return (
           <article className="match-card" key={t.id}>
             <div className="match-card-top">
-              <div className="grow">
-                <div className="mini-label">{String(t.domain).toUpperCase()}</div>
-                <h2>{t.name}</h2>
-              </div>
+              <div className="grow"><div className="mini-label">{String(t.domain).toUpperCase()}</div><h2>{t.name}</h2></div>
               {m && <span className="match-badge">{m.total}%</span>}
             </div>
             <p className="match-mission">{t.mission}</p>
             <div className="match-meta">
-              <span>{t.current_stage || "Moving"}</span>
+              {t.current_stage && <span>{t.current_stage}</span>}
               <span>{t.team_members?.[0]?.count ?? 0}명</span>
               {openRoles.length > 0 && <span>{openRoles.join(" · ")} 모집</span>}
             </div>
