@@ -16,10 +16,11 @@ const domains = [
 
 const openToOptions = [
   ["team", "TEAM"],
-  ["job", "JOB"],
-  ["collaboration", "COLLAB"],
   ["project", "PROJECT"],
+  ["competition", "COMPETITION"],
+  ["collaboration", "COLLAB"],
   ["research", "RESEARCH"],
+  ["job", "JOB"],
   ["investment", "INVESTMENT"],
 ] as const;
 
@@ -32,6 +33,9 @@ type Profile = {
   primary_domains: string[] | null;
   open_to: string[] | null;
   discoverable: boolean | null;
+  affiliation_name: string | null;
+  affiliation_role: string | null;
+  affiliation_visible: boolean | null;
 };
 
 export function SettingsForm({ profile, email }: { profile: Profile; email: string }) {
@@ -41,6 +45,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
   const [domainsValue, setDomainsValue] = useState<string[]>(profile.primary_domains ?? []);
   const [openTo, setOpenTo] = useState<string[]>(profile.open_to ?? []);
   const [discoverable, setDiscoverable] = useState(profile.discoverable ?? true);
+  const [affiliationVisible, setAffiliationVisible] = useState(profile.affiliation_visible ?? true);
 
   const initials = useMemo(() => (profile.display_name || email || "G").slice(0, 1).toUpperCase(), [profile.display_name, email]);
 
@@ -63,6 +68,9 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
         handle: handle || null,
         headline: String(form.get("headline") || "").trim() || null,
         bio: String(form.get("bio") || "").trim() || null,
+        affiliation_name: String(form.get("affiliation_name") || "").trim() || null,
+        affiliation_role: String(form.get("affiliation_role") || "").trim() || null,
+        affiliation_visible: affiliationVisible,
         primary_domains: domainsValue,
         open_to: openTo,
         discoverable,
@@ -83,28 +91,31 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
       <section className="settings-card identity-card">
         <div className="settings-avatar">{initials}</div>
         <div className="grow">
-          <div className="eyebrow">YOUR IDENTITY</div>
+          <div className="eyebrow">PROFILE</div>
           <h2>{profile.display_name || "이름을 남겨주세요"}</h2>
           <p>{email}</p>
         </div>
       </section>
 
       <section className="settings-card">
-        <div className="settings-heading">
-          <div><span>01</span><h3>프로필</h3></div>
-          <p>누군가 당신을 처음 발견했을 때 보게 되는 정보입니다.</p>
-        </div>
+        <div className="settings-heading"><div><span>01</span><h3>프로필</h3></div></div>
         <label className="field"><span>이름</span><input name="display_name" defaultValue={profile.display_name ?? ""} placeholder="당신의 이름" /></label>
         <label className="field"><span>아이디</span><div className="input-prefix"><b>@</b><input name="handle" defaultValue={profile.handle ?? ""} placeholder="gieoi" /></div></label>
-        <label className="field"><span>한 줄 소개</span><input name="headline" defaultValue={profile.headline ?? ""} placeholder="지금 무엇을 만들고 있나요?" maxLength={90} /></label>
-        <label className="field"><span>소개</span><textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} placeholder="당신이 어떤 삶을 살아가고 있는지 짧게 적어주세요." maxLength={280} /></label>
+        <label className="field"><span>한 줄 소개</span><input name="headline" defaultValue={profile.headline ?? ""} placeholder="지금 무엇을 하고 있나요?" maxLength={90} /></label>
+        <label className="field"><span>소개</span><textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} placeholder="필요한 만큼만 적어주세요." maxLength={280} /></label>
       </section>
 
       <section className="settings-card">
-        <div className="settings-heading">
-          <div><span>02</span><h3>나의 분야</h3></div>
-          <p>피드와 사람 추천이 이 선택을 기준으로 조금 더 선명해집니다.</p>
+        <div className="settings-heading"><div><span>02</span><h3>현재 소속</h3></div><p>회사, 학교, 연구실 등. 선택 사항입니다.</p></div>
+        <div className="settings-two-col">
+          <label className="field"><span>소속</span><input name="affiliation_name" defaultValue={profile.affiliation_name ?? ""} placeholder="예: NAVER, 한동대학교" /></label>
+          <label className="field"><span>역할</span><input name="affiliation_role" defaultValue={profile.affiliation_role ?? ""} placeholder="예: Backend Engineer" /></label>
         </div>
+        <div className="setting-inline-row"><span>프로필에 표시</span><button type="button" aria-label="현재 소속 표시" className={affiliationVisible ? "switch on" : "switch"} onClick={() => setAffiliationVisible((v) => !v)}><span /></button></div>
+      </section>
+
+      <section className="settings-card">
+        <div className="settings-heading"><div><span>03</span><h3>나의 분야</h3></div></div>
         <div className="choice-grid">
           {domains.map(([value, label]) => (
             <button key={value} type="button" className={domainsValue.includes(value) ? "choice active" : "choice"} onClick={() => toggle(domainsValue, value, setDomainsValue)}>{label}</button>
@@ -113,10 +124,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
       </section>
 
       <section className="settings-card">
-        <div className="settings-heading">
-          <div><span>03</span><h3>Open to</h3></div>
-          <p>어떤 연결과 기회를 받고 싶은지 표시합니다.</p>
-        </div>
+        <div className="settings-heading"><div><span>04</span><h3>Open to</h3></div></div>
         <div className="choice-grid compact">
           {openToOptions.map(([value, label]) => (
             <button key={value} type="button" className={openTo.includes(value) ? "choice active" : "choice"} onClick={() => toggle(openTo, value, setOpenTo)}>{label}</button>
@@ -125,10 +133,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
       </section>
 
       <section className="settings-card setting-row-card">
-        <div>
-          <div className="settings-heading inline"><div><span>04</span><h3>발견 허용</h3></div></div>
-          <p>꺼두면 다른 사용자의 탐색과 Scout에서 프로필이 노출되지 않습니다.</p>
-        </div>
+        <div><div className="settings-heading inline"><div><span>05</span><h3>발견 허용</h3></div></div><p>꺼두면 탐색과 Scout에 노출되지 않습니다.</p></div>
         <button type="button" aria-label="발견 허용" className={discoverable ? "switch on" : "switch"} onClick={() => setDiscoverable((v) => !v)}><span /></button>
       </section>
 
@@ -136,7 +141,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
       <button className="btn primary full settings-save" disabled={saving}>{saving ? "저장 중..." : "변경사항 저장"}</button>
 
       <section className="settings-card account-card">
-        <div className="settings-heading"><div><span>05</span><h3>계정</h3></div><p>현재 로그인한 계정입니다.</p></div>
+        <div className="settings-heading"><div><span>06</span><h3>계정</h3></div></div>
         <div className="account-email"><span>EMAIL</span><b>{email}</b></div>
         <SignOutButton />
       </section>
