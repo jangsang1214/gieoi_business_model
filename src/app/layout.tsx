@@ -4,6 +4,7 @@ import "./globals.css";
 import "./product.css";
 import "./v2.css";
 import "./v3.css";
+import "./v4.css";
 
 const sans = Noto_Sans_KR({
   variable: "--font-gieoi-sans",
