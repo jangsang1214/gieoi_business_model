@@ -2,11 +2,13 @@ type Direction = {
   future_tags?: string[] | null;
   skill_tags?: string[] | null;
   desired_complements?: string[] | null;
+  preferred_domains?: string[] | null;
   weekly_commitment_hours?: number | null;
   active_weeks_12?: number | null;
   team_continuity_months?: number | null;
   evidence_count?: number | null;
   verified_evidence_count?: number | null;
+  stage?: string | null;
 };
 
 type TeamDirection = {
@@ -16,6 +18,15 @@ type TeamDirection = {
   weekly_commitment_hours?: number | null;
   proof_count?: number | null;
   verified_proof_count?: number | null;
+};
+
+type Opportunity = {
+  domain?: string | null;
+  desired_future_tags?: string[] | null;
+  required_skills?: string[] | null;
+  desired_stage?: string | null;
+  minimum_verified_proofs?: number | null;
+  minimum_team_months?: number | null;
 };
 
 const norm = (xs: string[] = []) => [...new Set(xs.map(x => x.toLowerCase().trim()).filter(Boolean))];
@@ -44,4 +55,26 @@ export function directionMatch(user: Direction | null, team: TeamDirection | nul
     total: Math.round(total), future: Math.round(future), proof: Math.round(proof),
     complement: Math.round(complement), rhythm: Math.round(rhythm)
   };
+}
+
+export function opportunityMatch(user: Direction | null, opportunity: Opportunity | null) {
+  if (!user || !opportunity) return null;
+
+  const future = overlap(user.future_tags ?? [], opportunity.desired_future_tags ?? []);
+  const skills = overlap(user.skill_tags ?? [], opportunity.required_skills ?? []);
+  const domain = opportunity.domain && (user.preferred_domains ?? []).includes(opportunity.domain) ? 100 : 45;
+  const stage = !opportunity.desired_stage || !user.stage ? 60 : user.stage.toLowerCase() === opportunity.desired_stage.toLowerCase() ? 100 : 45;
+
+  const verified = user.verified_evidence_count ?? 0;
+  const neededVerified = opportunity.minimum_verified_proofs ?? 0;
+  const proof = neededVerified === 0 ? Math.min(100, 55 + verified * 8) : Math.min(100, (verified / Math.max(1, neededVerified)) * 100);
+
+  const teamMonths = user.team_continuity_months ?? 0;
+  const neededMonths = opportunity.minimum_team_months ?? 0;
+  const collaboration = neededMonths === 0 ? Math.min(100, 55 + teamMonths * 5) : Math.min(100, (teamMonths / Math.max(1, neededMonths)) * 100);
+
+  const activity = Math.min(100, (Math.min(12, user.active_weeks_12 ?? 0) / 12) * 100);
+  const total = future * .25 + skills * .25 + domain * .15 + stage * .10 + proof * .10 + collaboration * .10 + activity * .05;
+
+  return { total: Math.round(total) };
 }
