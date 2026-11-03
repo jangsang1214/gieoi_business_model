@@ -5,62 +5,66 @@ import { TeamApplyButton } from "@/components/team-apply-button";
 import { RecommendationActions } from "@/components/recommendation-actions";
 import { personMatch } from "@/lib/match";
 
-function proofLevel(rows: any[] = []) {
-  if (rows.some((x) => x.kind === "organization_verified" && x.verified_at)) return "VERIFIED";
-  if (rows.some((x) => x.kind === "team_confirmed" && x.verified_at)) return "TEAM";
-  if (rows.some((x) => x.kind === "connected" && x.verified_at)) return "CONNECTED";
-  if (rows.some((x) => x.kind === "evidence")) return "EVIDENCE";
-  return "SELF";
+const domains = ["business", "workout", "create", "study", "career", "lifestyle"];
+
+function hrefForDomain(domain: string, q: string) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (domain) params.set("domain", domain);
+  const suffix = params.toString();
+  return suffix ? `/explore?${suffix}` : "/explore";
 }
 
-export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ q?: string; domain?: string }> }) {
   const { supabase, userId } = await requireUser();
   const params = await searchParams;
   const q = String(params.q || "").trim();
-  const pattern = `%${q.replace(/[%_,()]/g, "")} %`.replace(" %", "%");
+  const domain = domains.includes(String(params.domain || "").toLowerCase()) ? String(params.domain).toLowerCase() : "";
+  const pattern = `%${q.replace(/[%_,()]/g, "")}%`;
+
+  let recordsQuery = supabase
+    .from("records")
+    .select("id,body,domain,type,occurred_at,author_id,goal_id,team_id,profiles!records_author_id_fkey(display_name,handle,headline,avatar_url),goals(id,title),teams(id,name)")
+    .eq("visibility", "public")
+    .neq("author_id", userId)
+    .order("occurred_at", { ascending: false })
+    .limit(60);
+  if (q) recordsQuery = recordsQuery.ilike("body", pattern);
+  if (domain) recordsQuery = recordsQuery.eq("domain", domain);
 
   const peopleQuery = supabase
     .from("profiles")
     .select("id,display_name,handle,headline,primary_domains,open_to,affiliation_name,affiliation_role,affiliation_visible")
     .neq("id", userId)
     .eq("discoverable", true)
-    .limit(30);
+    .limit(24);
 
   const teamsQuery = supabase
     .from("teams")
     .select("id,name,mission,domain,current_stage,owner_id,team_members(count)")
     .eq("discoverable", true)
-    .limit(20);
-
-  const goalsQuery = supabase
-    .from("goals")
-    .select("id,title,why,domain,current_stage,created_at")
-    .eq("visibility", "public")
-    .order("created_at", { ascending: false })
-    .limit(10);
-
-  const proofsQuery = supabase
-    .from("proofs")
-    .select("id,title,description,domain,happened_at,proof_provenance(kind,verified_at)")
-    .eq("visibility", "public")
-    .order("happened_at", { ascending: false })
-    .limit(10);
+    .limit(16);
 
   const [
-    { data: people }, { data: teams }, { data: goals }, { data: proofs },
+    { data: records }, { data: people }, { data: teams },
     { data: myProfile }, { data: myDirection }, { data: myGoals },
     { data: feedback }, { data: applications },
   ] = await Promise.all([
+    recordsQuery,
     q ? peopleQuery.or(`display_name.ilike.${pattern},handle.ilike.${pattern},headline.ilike.${pattern}`) : peopleQuery,
     q ? teamsQuery.or(`name.ilike.${pattern},mission.ilike.${pattern}`) : teamsQuery,
-    q ? goalsQuery.or(`title.ilike.${pattern},why.ilike.${pattern}`) : goalsQuery,
-    q ? proofsQuery.or(`title.ilike.${pattern},description.ilike.${pattern}`) : proofsQuery,
     supabase.from("profiles").select("primary_domains,open_to").eq("id", userId).single(),
     supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("goals").select("domain").eq("owner_id", userId).eq("status", "active"),
     supabase.from("recommendation_feedback").select("target_id,state").eq("user_id", userId).eq("target_type", "profile"),
     supabase.from("team_applications").select("team_id,status,created_at").eq("applicant_id", userId).order("created_at", { ascending: false }),
   ]);
+
+  const recordIds = (records || []).map((r: any) => r.id);
+  const { data: linkedProofs } = recordIds.length
+    ? await supabase.from("proofs").select("id,title,record_id").in("record_id", recordIds).eq("visibility", "public")
+    : { data: [] as any[] };
+  const proofByRecord = new Map((linkedProofs || []).map((p: any) => [p.record_id, p]));
 
   const personIds = (people || []).map((p: any) => p.id);
   const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -114,14 +118,57 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       };
     })
     .sort((a: any, b: any) => q ? 0 : (b.match?.total ?? -1) - (a.match?.total ?? -1))
-    .slice(0, 12);
+    .slice(0, 6);
 
   return <>
-    <header className="utility-head"><div><h1>탐색</h1><p>사람과 TEAM을 발견합니다.</p></div></header>
-    <form className="explore-search" action="/explore" method="get"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.2 4.2"/></svg><input name="q" defaultValue={q} placeholder="사람, TEAM, Goal, Proof 검색" aria-label="기어이 검색" />{q && <a href="/explore" className="search-clear">지우기</a>}</form>
+    <header className="utility-head explore-head-v7">
+      <div><h1>탐색</h1><p>다른 사람들이 지금 살아내고 있는 것을 발견합니다.</p></div>
+    </header>
 
-    <section className="discover-section">
-      <div className="section-title-row"><div><span>PEOPLE</span><h2>{q ? `“${q}”와 연결된 사람` : "For You"}</h2></div></div>
+    <form className="explore-search" action="/explore" method="get">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>
+      <input name="q" defaultValue={q} placeholder="기록, 사람, TEAM 검색" aria-label="기어이 검색" />
+      {domain && <input type="hidden" name="domain" value={domain} />}
+      {(q || domain) && <a href="/explore" className="search-clear">지우기</a>}
+    </form>
+
+    <nav className="explore-domain-tabs" aria-label="기록 분야">
+      <Link className={!domain ? "active" : ""} href={hrefForDomain("", q)}>전체</Link>
+      {domains.map((d) => <Link className={domain === d ? "active" : ""} key={d} href={hrefForDomain(d, q)}>{d.toUpperCase()}</Link>)}
+    </nav>
+
+    <section className="discover-section explore-record-section">
+      <div className="section-title-row"><div><span>DISCOVER</span><h2>{q ? `“${q}”의 공개 기록` : domain ? `${domain.toUpperCase()}에서 살아가는 사람들` : "지금, 다른 사람들의 삶"}</h2></div><small>{records?.length || 0} records</small></div>
+      {records?.length ? <div className="explore-record-feed">{records.map((r: any) => {
+        const author = r.profiles;
+        const proof = proofByRecord.get(r.id) as any;
+        return <article className="explore-record-card" key={r.id}>
+          <div className="explore-record-author">
+            <Link href={`/profile/${r.author_id}`} className="explore-author-link">
+              <div className="avatar">{String(author?.display_name || author?.handle || "?").slice(0, 1)}</div>
+              <div className="grow"><div className="post-user-line"><b>{author?.display_name || author?.handle || "기어이 사용자"}</b>{author?.handle && <span>@{author.handle}</span>}</div><div className="meta">{new Date(r.occurred_at).toLocaleDateString("ko-KR")} · {String(r.domain).toUpperCase()}</div></div>
+            </Link>
+            {r.type === "proof" && <span className="proof-level">PROOF</span>}
+          </div>
+
+          <p className="explore-record-body">{r.body}</p>
+
+          <div className="explore-context-links">
+            {r.goals?.id && <Link href={`/goal/${r.goals.id}`} className="chip">Goal · {r.goals.title}</Link>}
+            {r.teams?.id && <Link href={`/team/${r.teams.id}`} className="chip">TEAM · {r.teams.name}</Link>}
+            {proof?.id && <Link href={`/proof/${proof.id}`} className="chip proof-chip">Proof · {proof.title}</Link>}
+          </div>
+
+          <div className="explore-record-foot">
+            <Link href={`/profile/${r.author_id}`}>프로필 보기</Link>
+            {r.teams?.id && <Link href={`/team/${r.teams.id}`}>TEAM 보기</Link>}
+          </div>
+        </article>;
+      })}</div> : <div className="empty feed-empty"><h3>아직 발견할 공개 기록이 없습니다.</h3><p>다른 분야를 보거나 검색어를 바꿔보세요.</p></div>}
+    </section>
+
+    <section className="discover-section explore-secondary-section">
+      <div className="section-title-row"><div><span>PEOPLE</span><h2>기록 뒤의 사람들</h2></div><Link href="/explore" className="meta">추천</Link></div>
       {rankedPeople.length ? <div className="people-grid">{rankedPeople.map(({ profile: p, match }: any) => <article className="person-card person-match-card" key={p.id}>
         <Link href={`/profile/${p.id}`} className="person-card-link">
           <div className="person-top"><div className="avatar large">{String(p.display_name || p.handle || "?").slice(0, 1)}</div><div className="grow"><h3>{p.display_name || "기어이 사용자"}</h3><div className="meta">@{p.handle || "gieoi"}</div></div>{match && <span className="match-badge compact-match">{match.total}%</span>}</div>
@@ -132,13 +179,9 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       </article>)}</div> : <div className="compact-empty">조건에 맞는 사람을 아직 찾지 못했습니다.</div>}
     </section>
 
-    <section className="discover-section">
+    <section className="discover-section explore-secondary-section">
       <div className="section-title-row"><div><span>TEAM</span><h2>함께 해낼 팀</h2></div></div>
-      {teams?.length ? <div className="team-discovery-list">{teams.map((t: any) => <article className="discover-row" key={t.id}><Link href={`/team/${t.id}`} className="discover-row-link grow"><div className="row-title"><b>{t.name}</b><span>{String(t.domain).toUpperCase()}</span></div><p>{t.mission}</p><div className="meta">{t.current_stage || "Moving"} · {t.team_members?.[0]?.count ?? 0} people</div></Link>{t.owner_id !== userId ? <TeamApplyButton teamId={t.id} userId={userId} initialStatus={applicationMap.get(t.id) ?? null} /> : <Link href={`/team/${t.id}`} className="badge">내 TEAM</Link>}</article>)}</div> : <div className="compact-empty">아직 발견할 TEAM이 없습니다.</div>}
+      {teams?.length ? <div className="team-discovery-list">{teams.slice(0, 6).map((t: any) => <article className="discover-row" key={t.id}><Link href={`/team/${t.id}`} className="discover-row-link grow"><div className="row-title"><b>{t.name}</b><span>{String(t.domain).toUpperCase()}</span></div><p>{t.mission}</p><div className="meta">{t.current_stage || "Moving"} · {t.team_members?.[0]?.count ?? 0} people</div></Link>{t.owner_id !== userId ? <TeamApplyButton teamId={t.id} userId={userId} initialStatus={applicationMap.get(t.id) ?? null} /> : <Link href={`/team/${t.id}`} className="badge">내 TEAM</Link>}</article>)}</div> : <div className="compact-empty">아직 발견할 TEAM이 없습니다.</div>}
     </section>
-
-    <section className="discover-section"><div className="section-title-row"><div><span>GOALS</span><h2>지금 향하는 곳</h2></div></div>{goals?.length ? <div className="discovery-stack">{goals.map((g: any) => <article className="evidence-row" key={g.id}><div><span className="mini-label">{String(g.domain).toUpperCase()}</span><h3>{g.title}</h3><p>{g.why}</p></div>{g.current_stage && <span className="stage-pill">{g.current_stage}</span>}</article>)}</div> : <div className="compact-empty">공개된 Goal이 아직 없습니다.</div>}</section>
-
-    <section className="discover-section"><div className="section-title-row"><div><span>PROOF</span><h2>최근 남겨진 결과</h2></div></div>{proofs?.length ? <div className="discovery-stack">{proofs.map((p: any) => <article className="evidence-row" key={p.id}><div><span className="mini-label">{String(p.domain).toUpperCase()} · {new Date(p.happened_at).toLocaleDateString("ko-KR")}</span><h3>{p.title}</h3><p>{p.description}</p></div><span className="proof-level">{proofLevel(p.proof_provenance)}</span></article>)}</div> : <div className="compact-empty">공개된 Proof가 아직 없습니다.</div>}</section>
   </>;
 }
