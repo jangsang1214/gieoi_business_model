@@ -13,7 +13,7 @@ export default async function ProofDetail({ params }: { params: Promise<{ id: st
     proof.goal_id ? supabase.from("goals").select("id,title,status").eq("id", proof.goal_id).maybeSingle() : Promise.resolve({ data: null as any }),
     proof.team_id ? supabase.from("teams").select("id,name,mission").eq("id", proof.team_id).maybeSingle() : Promise.resolve({ data: null as any }),
     proof.record_id ? supabase.from("records").select("id,body,occurred_at").eq("id", proof.record_id).maybeSingle() : Promise.resolve({ data: null as any }),
-    supabase.from("proof_provenance").select("kind,source_url,verified_at").eq("proof_id", id),
+    supabase.from("proof_provenance").select("kind,evidence_url,verified_at").eq("proof_id", id),
   ]);
 
   const level = (provenance || []).some((x: any) => x.kind === "organization_verified" && x.verified_at)
@@ -48,6 +48,6 @@ export default async function ProofDetail({ params }: { params: Promise<{ id: st
 
     {record && <section className="discover-section"><div className="section-title-row"><div><span>RECORD</span><h2>이 결과가 남겨진 기록</h2></div></div><article className="explore-record-card proof-source-record"><p className="explore-record-body">{record.body}</p><div className="meta">{new Date(record.occurred_at).toLocaleDateString("ko-KR")}</div></article></section>}
 
-    {(provenance || []).some((x: any) => x.source_url) && <section className="discover-section"><div className="section-title-row"><div><span>EVIDENCE</span><h2>연결된 근거</h2></div></div><div className="discovery-stack">{(provenance || []).filter((x: any) => x.source_url).map((x: any, index: number) => <a key={`${x.kind}-${index}`} className="evidence-row" href={x.source_url} target="_blank" rel="noreferrer"><div><div className="mini-label">{String(x.kind).toUpperCase()}</div><h3>외부 근거 보기</h3></div><span className="stage-pill">↗</span></a>)}</div></section>}
+    {(provenance || []).some((x: any) => x.evidence_url) && <section className="discover-section"><div className="section-title-row"><div><span>EVIDENCE</span><h2>연결된 근거</h2></div></div><div className="discovery-stack">{(provenance || []).filter((x: any) => x.evidence_url).map((x: any, index: number) => <a key={`${x.kind}-${index}`} className="evidence-row" href={x.evidence_url} target="_blank" rel="noreferrer"><div><div className="mini-label">{String(x.kind).toUpperCase()}</div><h3>외부 근거 보기</h3></div><span className="stage-pill">↗</span></a>)}</div></section>}
   </>;
 }
