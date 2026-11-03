@@ -29,6 +29,16 @@ type Opportunity = {
   minimum_team_months?: number | null;
 };
 
+type PersonSignal = {
+  direction?: Direction | null;
+  domains?: string[] | null;
+  openTo?: string[] | null;
+  goalDomains?: string[] | null;
+  proofCount?: number | null;
+  verifiedProofCount?: number | null;
+  recentRecords?: number | null;
+};
+
 const norm = (xs: string[] = []) => [...new Set(xs.map(x => x.toLowerCase().trim()).filter(Boolean))];
 const overlap = (a: string[] = [], b: string[] = []) => {
   const A = new Set(norm(a)), B = new Set(norm(b));
@@ -55,6 +65,52 @@ export function directionMatch(user: Direction | null, team: TeamDirection | nul
     total: Math.round(total), future: Math.round(future), proof: Math.round(proof),
     complement: Math.round(complement), rhythm: Math.round(rhythm)
   };
+}
+
+export function personMatch(viewer: PersonSignal | null, candidate: PersonSignal | null) {
+  if (!viewer || !candidate) return null;
+  const vd = viewer.direction ?? null;
+  const cd = candidate.direction ?? null;
+  const weighted: { score: number; weight: number }[] = [];
+
+  if ((vd?.future_tags?.length ?? 0) && (cd?.future_tags?.length ?? 0)) {
+    weighted.push({ score: overlap(vd?.future_tags ?? [], cd?.future_tags ?? []), weight: 25 });
+  }
+
+  if ((vd?.desired_complements?.length ?? 0) && (cd?.skill_tags?.length ?? 0)) {
+    weighted.push({ score: overlap(vd?.desired_complements ?? [], cd?.skill_tags ?? []), weight: 25 });
+  }
+
+  const viewerDomains = [...(viewer.domains ?? []), ...(viewer.goalDomains ?? [])];
+  const candidateDomains = [...(candidate.domains ?? []), ...(candidate.goalDomains ?? [])];
+  if (viewerDomains.length && candidateDomains.length) {
+    weighted.push({ score: overlap(viewerDomains, candidateDomains), weight: 18 });
+  }
+
+  if ((viewer.openTo?.length ?? 0) && (candidate.openTo?.length ?? 0)) {
+    weighted.push({ score: overlap(viewer.openTo ?? [], candidate.openTo ?? []), weight: 10 });
+  }
+
+  if ((vd?.weekly_commitment_hours ?? 0) > 0 && (cd?.weekly_commitment_hours ?? 0) > 0) {
+    const hours = Math.max(0, 100 - Math.abs((vd?.weekly_commitment_hours ?? 0) - (cd?.weekly_commitment_hours ?? 0)) * 7);
+    weighted.push({ score: hours, weight: 7 });
+  }
+
+  const proofCount = candidate.proofCount ?? cd?.evidence_count ?? 0;
+  const verified = candidate.verifiedProofCount ?? cd?.verified_evidence_count ?? 0;
+  if (proofCount > 0 || verified > 0) {
+    weighted.push({ score: Math.min(100, 35 + proofCount * 8 + verified * 12), weight: 8 });
+  }
+
+  const recent = candidate.recentRecords ?? cd?.active_weeks_12 ?? 0;
+  if (recent > 0) {
+    weighted.push({ score: Math.min(100, recent * 18), weight: 7 });
+  }
+
+  if (weighted.length < 2) return null;
+  const weightSum = weighted.reduce((sum, x) => sum + x.weight, 0);
+  const raw = weighted.reduce((sum, x) => sum + x.score * x.weight, 0) / weightSum;
+  return { total: Math.round(Math.max(1, Math.min(99, raw))) };
 }
 
 export function opportunityMatch(user: Direction | null, opportunity: Opportunity | null) {
