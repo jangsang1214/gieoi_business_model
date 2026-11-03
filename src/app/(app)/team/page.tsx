@@ -7,15 +7,18 @@ import { directionMatch } from "@/lib/match";
 
 export default async function TeamPage() {
   const { supabase, userId } = await requireUser();
-  const [{ data: teams }, { data: mine }, { data: td }, { data: feedback }] = await Promise.all([
+  const [{ data: teams }, { data: mine }, { data: td }, { data: feedback }, { data: applications }] = await Promise.all([
     supabase.from("teams").select("id,name,mission,domain,current_stage,owner_id,team_members(count),team_roles(title,is_open)").eq("discoverable", true).limit(30),
     supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("team_direction_profiles").select("*"),
     supabase.from("recommendation_feedback").select("target_id,state").eq("user_id", userId).eq("target_type", "team"),
+    supabase.from("team_applications").select("team_id,status,created_at").eq("applicant_id", userId).order("created_at", { ascending: false }),
   ]);
 
   const tmap = new Map((td ?? []).map((x: any) => [x.team_id, x]));
   const fmap = new Map((feedback ?? []).map((x: any) => [x.target_id, x.state]));
+  const applicationMap = new Map<string, "pending" | "accepted" | "rejected" | "withdrawn">();
+  for (const app of applications ?? []) if (!applicationMap.has(app.team_id)) applicationMap.set(app.team_id, app.status);
   const visibleTeams = (teams ?? []).filter((t: any) => fmap.get(t.id) !== "dismissed");
 
   return <>
@@ -29,7 +32,7 @@ export default async function TeamPage() {
           <p className="match-mission">{t.mission}</p>
           <div className="match-meta">{t.current_stage && <span>{t.current_stage}</span>}<span>{t.team_members?.[0]?.count ?? 0}명</span>{openRoles.length > 0 && <span>{openRoles.join(" · ")} 모집</span>}</div>
         </Link>
-        <div className="match-card-actions"><div>{t.owner_id !== userId ? <TeamApplyButton teamId={t.id} userId={userId} /> : <Link href={`/team/${t.id}`} className="btn secondary">TEAM 관리</Link>}</div>{t.owner_id !== userId && <RecommendationActions userId={userId} targetType="team" targetId={t.id} initialState={(fmap.get(t.id) as "saved" | "dismissed" | undefined) ?? null} />}</div>
+        <div className="match-card-actions"><div>{t.owner_id !== userId ? <TeamApplyButton teamId={t.id} userId={userId} initialStatus={applicationMap.get(t.id) ?? null} /> : <Link href={`/team/${t.id}`} className="btn secondary">TEAM 관리</Link>}</div>{t.owner_id !== userId && <RecommendationActions userId={userId} targetType="team" targetId={t.id} initialState={(fmap.get(t.id) as "saved" | "dismissed" | undefined) ?? null} />}</div>
       </article>;
     })}
   </>;

@@ -1,0 +1,14 @@
+/* GIEOI V6 — core loop polish */
+.feed-tabs .pill,.inbox-tabs .pill{color:inherit;text-decoration:none}
+.avatar-link{display:block;color:inherit;text-decoration:none}.post-user-line a{color:inherit;text-decoration:none}.post-user-line a:hover{text-decoration:underline}
+.chip-link{color:inherit;text-decoration:none}.chip-link:hover{border-color:var(--pg-line-strong)}
+.person-match-card .person-top{align-items:flex-start}.compact-match{margin-left:auto;flex:0 0 auto}
+.person-action-v6{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.person-action-v6 .recommendation-actions{margin-left:auto}
+.application-sheet h2{margin-bottom:16px}.application-note{margin-top:8px;color:var(--pg-muted);font-size:11px;line-height:1.55;max-width:520px}.compact-notice{margin-top:6px;padding:8px 10px;font-size:10px}
+.thread-head{align-items:flex-end}.thread-head h1{margin:7px 0 0}.proposal-chip{display:inline-flex;align-items:center;margin-bottom:7px;padding:5px 8px;border:1px solid var(--pg-line);border-radius:999px;color:var(--pg-text);font-size:9px;font-weight:700;text-decoration:none;letter-spacing:.04em}
+.inbox-people{margin-top:34px}.inbox-tabs{margin-bottom:18px}
+@media(max-width:560px){
+  .person-action-v6{align-items:flex-start}.person-action-v6 .recommendation-actions{margin-left:0;width:100%}
+  .thread-head{display:flex;align-items:flex-end}.thread-head .btn{white-space:nowrap}
+  .feed-tabs,.inbox-tabs{overflow-x:auto;scrollbar-width:none}.feed-tabs::-webkit-scrollbar,.inbox-tabs::-webkit-scrollbar{display:none}
+}
