@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { FeedPrompt } from "@/components/feed-prompt";
 import { RecordMedia } from "@/components/record-media";
+import { GettingStarted } from "@/components/getting-started";
 
 const domains = ["business", "workout", "create", "study", "career", "lifestyle"] as const;
 
@@ -10,10 +11,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
   const params = await searchParams;
   const selectedDomain = domains.includes(params.domain as (typeof domains)[number]) ? params.domain : null;
 
-  const [{ data: me }, { data: myGoals }, { data: memberships }] = await Promise.all([
+  const [{ data: me }, { data: myGoals }, { data: memberships }, { count: myRecordCount }] = await Promise.all([
     supabase.from("profiles").select("primary_domains").eq("id", userId).single(),
     supabase.from("goals").select("id,domain").eq("owner_id", userId).eq("status", "active"),
     supabase.from("team_members").select("team_id").eq("user_id", userId).eq("status", "active"),
+    supabase.from("records").select("id",{head:true,count:"exact"}).eq("author_id",userId),
   ]);
 
   let recordsQuery = supabase
@@ -48,6 +50,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
       </header>
 
       <FeedPrompt />
+      <GettingStarted hasDomain={Boolean(me?.primary_domains?.length)} hasGoal={Boolean(myGoals?.length)} hasRecord={Boolean(myRecordCount)} />
 
       <div className="tabs feed-tabs">
         <Link href="/" className={`pill ${!selectedDomain ? "active" : ""}`}>For You</Link>
