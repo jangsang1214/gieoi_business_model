@@ -1,0 +1,47 @@
+/* GIEOI V9 — Media, activity, notifications; restrained mobile-first surfaces */
+.record-media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:12px 0;border-radius:10px;overflow:hidden;max-width:100%}
+.record-media.count-1{grid-template-columns:1fr}
+.record-media-image{display:block;min-width:0;overflow:hidden;aspect-ratio:1.3;position:relative;background:var(--pg-soft)}
+.record-media.count-1 .record-media-image{aspect-ratio:1.65}
+.record-media-image img{display:block;width:100%;height:100%;object-fit:cover}
+.record-media-feed,.record-media-profile{width:100%}
+.record-media-profile{max-width:500px}
+.composer-media-v9{max-height:min(90dvh,780px);overflow-y:auto}
+.upload-image-button{display:flex;align-items:center;gap:10px;border:1px dashed var(--pg-line-strong);border-radius:9px;padding:11px 13px;font-size:12px;cursor:pointer;width:fit-content;margin-bottom:15px}
+.upload-image-button:hover{background:var(--pg-soft)}
+.upload-image-button span{font-size:10px;color:var(--pg-muted)}
+.upload-image-button input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.composer-image-previews{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.composer-image-preview{position:relative;border-radius:9px;overflow:hidden;aspect-ratio:1;background:var(--pg-soft)}
+.composer-image-preview img{display:block;width:100%;height:100%;object-fit:cover}
+.composer-image-preview button{position:absolute;top:5px;right:5px;width:25px;height:25px;border:0;border-radius:50%;background:rgba(0,0,0,.8);color:#fff;font-size:18px;cursor:pointer}
+.discovery-tile-v8.tile-has-media .discovery-tile-link{position:relative;isolation:isolate}
+.discovery-tile-v8.tile-has-media .record-media-grid{position:absolute;inset:0;margin:0;display:block;border-radius:0;z-index:-2;pointer-events:none}
+.discovery-tile-v8.tile-has-media .record-media-grid .record-media-image{display:none}
+.discovery-tile-v8.tile-has-media .record-media-grid .record-media-image:first-child{display:block;width:100%;height:100%;aspect-ratio:auto}
+.discovery-tile-v8.tile-has-media .discovery-tile-link:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.48),rgba(0,0,0,.30) 34%,rgba(0,0,0,.83));z-index:-1;pointer-events:none}
+.discovery-tile-v8.tile-has-media .tile-topline,.discovery-tile-v8.tile-has-media .tile-bottom{color:#fff}
+.discovery-tile-v8.tile-has-media .tile-main p{color:#fff;text-shadow:0 1px 6px #000}
+.notification-icon-link{position:relative}
+.notification-count{position:absolute;top:-3px;right:-5px;min-width:17px;height:17px;padding:0 3px;border-radius:99px;background:var(--pg-accent);color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center}
+.notification-list{display:grid;gap:1px;margin:16px 0 28px;border:1px solid var(--pg-line);border-radius:14px;overflow:hidden;background:var(--pg-line)}
+.notification-row{display:flex;align-items:center;gap:11px;padding:16px;background:var(--pg-panel);text-decoration:none;color:var(--pg-text);min-width:0}
+.notification-row:hover{background:var(--pg-panel-2)}
+.notification-row.unread{background:#181515}
+.notification-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:transparent}
+.notification-row.unread .notification-dot{background:#b76e75}
+.notification-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.notification-copy small{font-size:9px;color:var(--pg-muted);letter-spacing:.04em}
+.notification-copy b{font-size:12px;font-weight:600;line-height:1.5;overflow-wrap:anywhere}
+.notification-copy time{font-size:9px;color:var(--pg-faint)}
+.notification-go{font-size:14px;color:var(--pg-muted)}
+.record-detail-v9{background:var(--pg-panel);border:1px solid var(--pg-line);border-radius:15px;padding:18px;margin-top:18px}
+.record-detail-author{display:flex;align-items:center;gap:10px}
+.record-detail-author>div{flex:1}
+.record-detail-author a{text-decoration:none;color:inherit}
+.record-detail-author .avatar{display:grid;place-items:center}
+.record-detail-author b{font-size:12px}
+.record-detail-body{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.8;margin:22px 0}
+.record-detail-v9 .record-media{margin:16px 0}
+.record-detail-v9 .explore-context-links{margin-top:18px}
+@media(max-width:560px){.composer-image-previews{gap:5px}.record-detail-v9{padding:14px;border-radius:12px}.notification-row{padding:14px 12px}.record-media{gap:3px}.record-media.count-1 .record-media-image{aspect-ratio:1.2}}
