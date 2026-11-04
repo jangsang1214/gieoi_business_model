@@ -139,7 +139,8 @@ export function RecordComposer({ userId }: { userId: string }) {
         setErr("기록은 저장됐지만 Proof 연결에 실패했습니다. 프로필에서 기록을 확인해 주세요.");
         setFiles([]);
         setBody("");
-        setOpen(false);
+        setOpen(true);
+        router.refresh();
       } else {
         if (uploaded.length) await supabase.storage.from("record-media").remove(uploaded);
         setErr(e instanceof Error ? e.message : "게시하지 못했습니다. 다시 시도해 주세요.");
