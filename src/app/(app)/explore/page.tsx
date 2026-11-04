@@ -118,7 +118,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       date: r.occurred_at,
       body: r.body,
       media: r.media,
-      href: `/profile/${r.author_id}`,
+      href: `/record/${r.id}`,
       authorId: r.author_id,
       authorName: r.profiles?.display_name || r.profiles?.handle || "기어이 사용자",
       authorHandle: r.profiles?.handle || null,
