@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { trackActivity } from "@/components/activity-tracker";
 
 export function RecommendationActions({
   userId,
@@ -41,6 +42,9 @@ export function RecommendationActions({
       }, { onConflict: "user_id,target_type,target_id" });
     }
 
+    if (next === "saved" && (targetType === "team" || targetType === "profile")) {
+      void trackActivity(userId, "recommendation_save", targetType, targetId, "recommendation");
+    }
     setState(next);
     setBusy(false);
     if (next === "dismissed") router.refresh();
