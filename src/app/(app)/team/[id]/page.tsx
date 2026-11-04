@@ -6,6 +6,8 @@ import { TeamGoalForm } from "@/components/team-goal-form";
 import { TeamRoleCreator } from "@/components/team-role-creator";
 import { TeamApplicationReview } from "@/components/team-application-review";
 import { ComposeLinkButton } from "@/components/compose-link-button";
+import { RecordMedia } from "@/components/record-media";
+import { ActivityViewTracker } from "@/components/activity-tracker";
 
 export default async function TeamDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +21,7 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
     supabase.from("team_roles").select("*").eq("team_id", id).order("created_at"),
     supabase.from("team_members").select("team_id,user_id,role_name,status,joined_at").eq("team_id", id).eq("status", "active"),
     supabase.from("goals").select("*").eq("team_id", id).order("created_at", { ascending: false }),
-    supabase.from("records").select("id,body,type,domain,occurred_at,author_id,goal_id").eq("team_id", id).order("occurred_at", { ascending: false }).limit(30),
+    supabase.from("records").select("id,body,media,type,domain,occurred_at,author_id,goal_id").eq("team_id", id).order("occurred_at", { ascending: false }).limit(30),
     supabase.from("proofs").select("id,title,description,domain,happened_at,owner_id,goal_id").eq("team_id", id).order("happened_at", { ascending: false }).limit(20),
     isOwner ? supabase.from("team_applications").select("id,applicant_id,role_id,status,created_at,weekly_hours,why").eq("team_id", id).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as any[] }),
     supabase.from("team_applications").select("role_id,status,created_at").eq("team_id", id).eq("applicant_id", userId).order("created_at", { ascending: false }),
@@ -39,6 +41,7 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
   }
 
   return <>
+    <ActivityViewTracker userId={userId} type="team_view" id={id}/>
     <header className="utility-head team-detail-head">
       <div>
         <Link href="/team" className="meta">← TEAM</Link>
@@ -65,7 +68,7 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
 
     <section className="discover-section">
       <div className="section-title-row"><div><span>TRAJECTORY</span><h2>TEAM의 궤적</h2></div>{isMember && <ComposeLinkButton teamId={id} label="기록 남기기" />}</div>
-      {records?.length ? <div className="trajectory-list">{records.map((r:any)=><article className="trajectory-event" key={r.id}><div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""}/><span/></div><div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p></div></article>)}</div> : <div className="compact-empty">TEAM에 연결된 기록이 쌓이면 여기에 나타납니다.</div>}
+      {records?.length ? <div className="trajectory-list">{records.map((r:any)=><article className="trajectory-event" key={r.id}><div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""}/><span/></div><div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p><RecordMedia media={r.media} variant="profile" /></div></article>)}</div> : <div className="compact-empty">TEAM에 연결된 기록이 쌓이면 여기에 나타납니다.</div>}
     </section>
 
     <section className="discover-section">
