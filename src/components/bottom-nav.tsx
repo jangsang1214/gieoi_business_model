@@ -9,6 +9,7 @@ const desktopItems = [
   ["/team", "TEAM", "team"],
   ["/opportunity", "기회", "opportunity"],
   ["/messages", "메시지", "message"],
+  ["/notifications", "알림", "bell"],
   ["/profile", "내 삶", "profile"],
 ] as const;
 
@@ -25,6 +26,7 @@ function NavIcon({ name }: { name: string }) {
   if (name === "search") return <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>;
   if (name === "team") return <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3.5 19c.4-4 2.6-6 5.5-6s5.1 2 5.5 6M14 14c3.5 0 5.4 1.8 5.8 5"/></svg>;
   if (name === "opportunity") return <svg viewBox="0 0 24 24"><path d="M5.2 18.8 18.8 5.2M9.2 5.2h9.6v9.6"/></svg>;
+  if (name === "bell") return <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg>;
   if (name === "message") return <svg viewBox="0 0 24 24"><path d="M4 5.5h16v11H9l-5 3z"/></svg>;
   return <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.4-4.5 2.8-7 6.5-7s6.1 2.5 6.5 7"/></svg>;
 }
