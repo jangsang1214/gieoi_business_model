@@ -13,8 +13,8 @@ export async function trackActivity(userId: string, eventType: EventKind, target
   await supabase.from("activity_events").insert({ user_id: userId, event_type: eventType, target_kind: targetKind, target_id: targetId, source });
 }
 
-export function ActivityViewTracker({ userId, type, id, source = "detail" }: { userId: string; type: "profile_view" | "team_view" | "proof_view"; id: string; source?: string }) {
-  useEffect(() => { void trackActivity(userId, type, type.replace("_view", "") as Target, id, source); }, [userId, type, id, source]);
+export function ActivityViewTracker({ userId, type, id, source = "detail" }: { userId: string; type: "record_open" | "profile_view" | "team_view" | "proof_view"; id: string; source?: string }) {
+  useEffect(() => { void trackActivity(userId, type, (type === "record_open" ? "record" : type.replace("_view", "")) as Target, id, source); }, [userId, type, id, source]);
   return null;
 }
 
