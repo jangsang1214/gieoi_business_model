@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { RecordMedia } from "@/components/record-media";
+import { DiscoveryTracker } from "@/components/activity-tracker";
 
 const domains = ["business", "workout", "create", "study", "career", "lifestyle"];
 const kinds = ["record", "proof", "goal", "team"] as const;
@@ -18,6 +20,7 @@ type DiscoveryItem = {
   authorName?: string | null;
   authorHandle?: string | null;
   meta?: string | null;
+  media?: unknown;
 };
 
 function exploreHref({ q, domain, kind }: { q?: string; domain?: string; kind?: string }) {
@@ -44,7 +47,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
 
   let recordsQuery = supabase
     .from("records")
-    .select("id,body,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle)")
+    .select("id,body,media,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle)")
     .eq("visibility", "public")
     .neq("author_id", userId)
     .neq("type", "proof")
@@ -114,7 +117,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       domain: r.domain,
       date: r.occurred_at,
       body: r.body,
-      href: `/profile/${r.author_id}`,
+      media: r.media,
+      href: `/record/${r.id}`,
       authorId: r.author_id,
       authorName: r.profiles?.display_name || r.profiles?.handle || "기어이 사용자",
       authorHandle: r.profiles?.handle || null,
@@ -195,18 +199,20 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
       </nav>
     </div>
 
+    <DiscoveryTracker userId={userId}/>
     {items.length ? <div className="discovery-grid-v8">{items.map((item, index) => {
       const isFeatured = item.kind === "proof" || (item.kind === "record" && String(item.body || "").length > 120);
       const isWide = item.kind === "team" || (item.kind === "goal" && index % 5 === 0);
-      const cardClass = ["discovery-tile-v8", `tile-${item.kind}`, isFeatured ? "tile-featured" : "", isWide ? "tile-wide" : ""].filter(Boolean).join(" ");
+      const cardClass = ["discovery-tile-v8", `tile-${item.kind}`, isFeatured ? "tile-featured" : "", isWide ? "tile-wide" : "", Array.isArray(item.media) && item.media.length ? "tile-has-media" : ""].filter(Boolean).join(" ");
 
-      return <article className={cardClass} key={`${item.kind}-${item.id}`}>
+      return <article className={cardClass} key={`${item.kind}-${item.id}`} data-discovery-id={item.id} data-discovery-kind={item.kind}>
         <Link href={item.href} className="discovery-tile-link">
           <div className="tile-topline">
             <span className="tile-kind">{item.kind === "record" ? "RECORD" : item.kind.toUpperCase()}</span>
             <span>{String(item.domain).toUpperCase()}</span>
           </div>
 
+          <RecordMedia media={item.media} variant="grid" />
           <div className="tile-main">
             {item.title && <h2>{item.title}</h2>}
             <p>{excerpt(item.body, isFeatured ? 220 : 135)}</p>

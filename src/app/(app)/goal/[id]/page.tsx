@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
+import { RecordMedia } from "@/components/record-media";
 
 export default async function GoalDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -10,7 +11,7 @@ export default async function GoalDetail({ params }: { params: Promise<{ id: str
 
   const [{ data: owner }, { data: records }, { data: proofs }, { data: team }] = await Promise.all([
     supabase.from("profiles").select("id,display_name,handle,headline").eq("id", goal.owner_id).maybeSingle(),
-    supabase.from("records").select("id,body,type,domain,occurred_at,team_id").eq("goal_id", id).order("occurred_at", { ascending: false }).limit(30),
+    supabase.from("records").select("id,body,media,type,domain,occurred_at,team_id").eq("goal_id", id).order("occurred_at", { ascending: false }).limit(30),
     supabase.from("proofs").select("id,title,description,domain,happened_at").eq("goal_id", id).order("happened_at", { ascending: false }).limit(20),
     goal.team_id ? supabase.from("teams").select("id,name,mission").eq("id", goal.team_id).maybeSingle() : Promise.resolve({ data: null as any }),
   ]);
@@ -31,7 +32,7 @@ export default async function GoalDetail({ params }: { params: Promise<{ id: str
 
     <section className="discover-section">
       <div className="section-title-row"><div><span>TRAJECTORY</span><h2>이 Goal을 향한 기록</h2></div>{goal.target_date && <small>목표 {new Date(goal.target_date).toLocaleDateString("ko-KR")}</small>}</div>
-      {records?.length ? <div className="trajectory-list">{records.map((r: any) => <article className="trajectory-event" key={r.id}><div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""}/><span/></div><div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "기록"} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p></div></article>)}</div> : <div className="compact-empty">아직 공개된 기록이 없습니다.</div>}
+      {records?.length ? <div className="trajectory-list">{records.map((r: any) => <article className="trajectory-event" key={r.id}><div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""}/><span/></div><div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "기록"} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p><RecordMedia media={r.media} variant="profile"/></div></article>)}</div> : <div className="compact-empty">아직 공개된 기록이 없습니다.</div>}
     </section>
 
     <section className="discover-section">

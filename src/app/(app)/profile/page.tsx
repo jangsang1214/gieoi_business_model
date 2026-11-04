@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RecordMedia } from "@/components/record-media";
 import { requireUser } from "@/lib/auth";
 import { GoalForm } from "@/components/goal-form";
 import { DirectionEditor } from "@/components/direction-editor";
@@ -21,8 +22,8 @@ export default async function Profile() {
     supabase.from("proofs").select("*,proof_provenance(*)").eq("owner_id", userId).order("happened_at", { ascending: false }),
     supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("collaboration_proofs").select("*,teams(name)").eq("contributor_id", userId).order("created_at", { ascending: false }),
-    supabase.from("records").select("id,body,domain,type,occurred_at").eq("author_id", userId).order("occurred_at", { ascending: false }).limit(12),
-    supabase.from("team_members").select("team_id,role,status,joined_at,teams(name,domain,mission)").eq("user_id", userId).eq("status", "active"),
+    supabase.from("records").select("id,body,media,domain,type,occurred_at").eq("author_id", userId).order("occurred_at", { ascending: false }).limit(12),
+    supabase.from("team_members").select("team_id,role_name,status,joined_at,teams(name,domain,mission)").eq("user_id", userId).eq("status", "active"),
   ]);
 
   const displayName = p.display_name || "당신의 삶";
@@ -72,7 +73,7 @@ export default async function Profile() {
         {records?.length ? <div className="trajectory-list">{records.map((r: any) => (
           <article className="trajectory-event" key={r.id}>
             <div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""} /><span /></div>
-            <div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "RECORD"} · {String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p></div>
+            <div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "RECORD"} · {String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p><RecordMedia media={r.media} variant="profile" /></div>
           </article>
         ))}</div> : <div className="compact-empty">기록을 남기면 여기에 쌓입니다.</div>}
       </section>
@@ -91,7 +92,7 @@ export default async function Profile() {
         ))}</div> : <div className="compact-empty">해낸 것이 생기면 Proof로 남겨보세요.</div>}
       </section>
 
-      {memberships?.length ? <section className="discover-section profile-section"><div className="section-title-row"><div><span>TEAM</span><h2>함께 해내고 있는 것</h2></div></div><div className="team-discovery-list">{memberships.map((m: any) => <article className="discover-row" key={m.team_id}><div className="discover-symbol">T</div><div className="grow"><div className="row-title"><b>{m.teams?.name}</b><span>{String(m.teams?.domain || "TEAM").toUpperCase()}</span></div><p>{m.teams?.mission}</p><div className="meta">{m.role || "Member"}</div></div></article>)}</div></section> : null}
+      {memberships?.length ? <section className="discover-section profile-section"><div className="section-title-row"><div><span>TEAM</span><h2>함께 해내고 있는 것</h2></div></div><div className="team-discovery-list">{memberships.map((m: any) => <article className="discover-row" key={m.team_id}><div className="discover-symbol">T</div><div className="grow"><div className="row-title"><b>{m.teams?.name}</b><span>{String(m.teams?.domain || "TEAM").toUpperCase()}</span></div><p>{m.teams?.mission}</p><div className="meta">{m.role_name || "Member"}</div></div></article>)}</div></section> : null}
 
       {collab?.length ? <section className="discover-section profile-section"><div className="section-title-row"><div><span>COLLABORATION</span><h2>함께 만든 결과</h2></div></div><div className="discovery-stack">{collab.map((c: any) => <article className="evidence-row" key={c.id}><div><h3>{c.title}</h3><p>{c.teams?.name} · {c.contribution_type}</p></div></article>)}</div></section> : null}
     </>
