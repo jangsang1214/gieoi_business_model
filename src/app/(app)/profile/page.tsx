@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RecordMedia } from "@/components/record-media";
 import { requireUser } from "@/lib/auth";
 import { GoalForm } from "@/components/goal-form";
 import { DirectionEditor } from "@/components/direction-editor";
@@ -21,7 +22,7 @@ export default async function Profile() {
     supabase.from("proofs").select("*,proof_provenance(*)").eq("owner_id", userId).order("happened_at", { ascending: false }),
     supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("collaboration_proofs").select("*,teams(name)").eq("contributor_id", userId).order("created_at", { ascending: false }),
-    supabase.from("records").select("id,body,domain,type,occurred_at").eq("author_id", userId).order("occurred_at", { ascending: false }).limit(12),
+    supabase.from("records").select("id,body,media,domain,type,occurred_at").eq("author_id", userId).order("occurred_at", { ascending: false }).limit(12),
     supabase.from("team_members").select("team_id,role,status,joined_at,teams(name,domain,mission)").eq("user_id", userId).eq("status", "active"),
   ]);
 
@@ -72,7 +73,7 @@ export default async function Profile() {
         {records?.length ? <div className="trajectory-list">{records.map((r: any) => (
           <article className="trajectory-event" key={r.id}>
             <div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""} /><span /></div>
-            <div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "RECORD"} · {String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p></div>
+            <div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "RECORD"} · {String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p><RecordMedia media={r.media} variant="profile" /></div>
           </article>
         ))}</div> : <div className="compact-empty">기록을 남기면 여기에 쌓입니다.</div>}
       </section>
