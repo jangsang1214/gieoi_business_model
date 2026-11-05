@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { RecordMedia } from "@/components/record-media";
 import { ActivityViewTracker } from "@/components/activity-tracker";
+import { RecordComments } from "@/components/record-comments";
 
 export default async function RecordDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase, userId } = await requireUser();
-  const { data: record } = await supabase.from("records").select("id,author_id,body,media,type,domain,occurred_at,goal_id,team_id").eq("id",id).maybeSingle();
+  const { data: record } = await supabase.from("records").select("id,author_id,body,media,type,domain,occurred_at,goal_id,team_id,visibility").eq("id",id).maybeSingle();
   if (!record) notFound();
   const [{ data: author }, { data: goal }, { data: team }, { data: proof }] = await Promise.all([
     supabase.from("profiles").select("id,display_name,handle").eq("id",record.author_id).maybeSingle(),
@@ -16,6 +17,18 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
     supabase.from("proofs").select("id,title").eq("record_id",id).limit(1).maybeSingle(),
   ]);
   const profileHref = record.author_id === userId ? "/profile" : `/profile/${record.author_id}`;
+  const { data: comments } = record.visibility === "public"
+    ? await supabase.from("record_comments").select("id,author_id,body,created_at").eq("record_id",id).order("created_at",{ascending:true}).limit(100)
+    : { data: [] as { id: string; author_id: string; body: string; created_at: string }[] };
+  const authorIds = [...new Set((comments || []).map((comment) => comment.author_id))];
+  const { data: commentAuthors } = authorIds.length
+    ? await supabase.from("profiles").select("id,display_name,handle").in("id",authorIds)
+    : { data: [] as { id: string; display_name: string | null; handle: string | null }[] };
+  const authorMap = new Map((commentAuthors || []).map((person) => [person.id, person]));
+  const initialComments = (comments || []).map((comment) => ({ ...comment,
+    authorName: authorMap.get(comment.author_id)?.display_name || "기어이 사용자",
+    authorHandle: authorMap.get(comment.author_id)?.handle || null,
+  }));
   return <>
     <ActivityViewTracker userId={userId} type="record_open" id={id} source="record_detail"/>
     <header className="utility-head"><div><Link href="/explore" className="meta">← 탐색</Link><h1>기록</h1></div></header>
@@ -34,5 +47,6 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
         {proof && <Link href={`/proof/${proof.id}`} className="chip">Proof · {proof.title}</Link>}
       </div>
     </article>
+    {record.visibility === "public" && <RecordComments recordId={id} userId={userId} recordOwnerId={record.author_id} initial={initialComments}/>} 
   </>;
 }
