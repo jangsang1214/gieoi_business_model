@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { RecordMedia } from "@/components/record-media";
 import { ActivityViewTracker } from "@/components/activity-tracker";
 import { RecordComments } from "@/components/record-comments";
+import { RecordOwnerActions } from "@/components/record-owner-actions";
+import { RecordDeleteButton } from "@/components/record-delete-button";
 
 export default async function RecordDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,6 +43,11 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
       </div>
       {record.body && <p className="record-detail-body">{record.body}</p>}
       <RecordMedia media={record.media}/>
+      {record.author_id === userId && <div className="record-owner-actions">
+        <RecordOwnerActions recordId={record.id} authorId={userId} initialBody={record.body}
+          initialVisibility={record.visibility} hasTeam={Boolean(record.team_id)}/>
+        <RecordDeleteButton id={record.id} authorId={userId} media={record.media}/>
+      </div>}
       <div className="explore-context-links">
         {goal && <Link href={`/goal/${goal.id}`} className="chip">Goal · {goal.title}</Link>}
         {team && <Link href={`/team/${team.id}`} className="chip">TEAM · {team.name}</Link>}

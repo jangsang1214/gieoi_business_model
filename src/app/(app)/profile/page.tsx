@@ -31,7 +31,7 @@ export default async function Profile() {
   const proofCount = proofs?.length ?? 0;
   const goalCount = goals?.filter((g: any) => g.status === "active").length ?? 0;
   const teamCount = memberships?.length ?? 0;
-  const verifiedCount = proofs?.filter((x: any) => level(x.proof_provenance) !== "SELF").length ?? 0;
+  const verifiedCount = proofs?.filter((x: any) => (x.proof_provenance || []).some((p: any) => ["connected","team_confirmed","organization_verified"].includes(p.kind) && Boolean(p.verified_at))).length ?? 0;
   const affiliation = p.affiliation_visible && p.affiliation_name
     ? [p.affiliation_name, p.affiliation_role].filter(Boolean).join(" · ")
     : null;
@@ -73,7 +73,7 @@ export default async function Profile() {
         {records?.length ? <div className="trajectory-list">{records.map((r: any) => (
           <article className="trajectory-event" key={r.id}>
             <div className="trajectory-marker"><i className={r.type === "proof" ? "proof" : ""} /><span /></div>
-            <div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "RECORD"} · {String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p><RecordMedia media={r.media} variant="profile" /></div>
+            <div className="trajectory-content"><div className="trajectory-meta">{r.type === "proof" ? "PROOF" : "RECORD"} · {String(r.domain).toUpperCase()} · {new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div><p>{r.body}</p><RecordMedia media={r.media} variant="profile" /><Link href={`/record/${r.id}`} className="post-comment-link">기록 보기 · 수정 →</Link></div>
           </article>
         ))}</div> : <div className="compact-empty">기록을 남기면 여기에 쌓입니다.</div>}
       </section>

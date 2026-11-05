@@ -1,0 +1,10 @@
+/* GIEOI V11: owner tools and privacy first */
+.record-owner-actions{display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding-top:14px;border-top:1px solid var(--pg-line);flex-wrap:wrap}
+.record-owner-tools{display:flex;flex-direction:column;gap:10px;flex:1}
+.record-owner-editor{display:grid;gap:10px;min-width:min(100%,340px)}
+.record-owner-editor .field{display:grid;gap:6px;font-size:11px;color:var(--pg-muted)}
+.record-owner-editor textarea,.record-owner-editor select{width:100%;border:1px solid var(--pg-line-strong);background:var(--pg-panel-2);border-radius:9px;padding:10px;color:var(--pg-text);font-size:12px;line-height:1.6}
+.record-owner-editor textarea{resize:vertical}
+.record-owner-tools .btn{align-self:flex-start}
+.message-compose .error{flex-basis:100%;width:100%;margin-top:6px}
+@media(max-width:560px){.record-owner-actions{gap:8px}.record-owner-editor{min-width:100%}}
