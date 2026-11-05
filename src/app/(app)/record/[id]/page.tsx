@@ -46,7 +46,7 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
       {record.author_id === userId && <div className="record-owner-actions">
         <RecordOwnerActions recordId={record.id} authorId={userId} initialBody={record.body}
           initialVisibility={record.visibility} hasTeam={Boolean(record.team_id)}/>
-        <RecordDeleteButton id={record.id} authorId={userId}/>
+        <RecordDeleteButton id={record.id} authorId={userId} media={record.media}/>
       </div>}
       <div className="explore-context-links">
         {goal && <Link href={`/goal/${goal.id}`} className="chip">Goal · {goal.title}</Link>}
