@@ -52,7 +52,13 @@ export function TeamApplyButton({
     }
 
     if (existing?.id) {
-      await supabase.from("team_applications").delete().eq("id", existing.id);
+      const { data: removed, error: removeError } = await supabase.from("team_applications")
+        .delete().eq("id", existing.id).select("id").maybeSingle();
+      if (removeError || !removed) {
+        setError(removeError?.message || "재지원 준비가 실패했습니다.");
+        setBusy(false);
+        return;
+      }
     }
 
     const why = String(fd.get("why") || "").trim();
