@@ -21,7 +21,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
 
   let recordsQuery = supabase
     .from("records")
-    .select("id,body,media,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle),goals(id,title,domain),teams(id,name)")
+    .select("id,body,media,visibility,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle),goals(id,title,domain),teams(id,name)")
     .order("occurred_at", { ascending: false })
     .limit(selectedDomain ? 30 : 60);
   if (selectedDomain) recordsQuery = recordsQuery.eq("domain", selectedDomain);
@@ -80,7 +80,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <div className="post-copy">
             <p>{r.body}</p>
             <RecordMedia media={r.media} />
-            <Link href={`/record/${r.id}`} className="post-comment-link">댓글 · 기록 보기 →</Link>
+            <Link href={`/record/${r.id}`} className="post-comment-link">{r.visibility === "public" ? "댓글 · 기록 보기" : "기록 보기"} →</Link>
             {(r.goals?.title || r.teams?.name) && <div className="linked">
               {r.goals?.title && <span className="chip">Goal · {r.goals.title}</span>}
               {r.teams?.name && <Link href={`/team/${r.teams.id}`} className="chip chip-link">TEAM · {r.teams.name}</Link>}
