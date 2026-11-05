@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function TeamApplicationReview({ applicationId, teamId, applicantId, roleName }: { applicationId: string; teamId: string; applicantId: string; roleName: string }) {
+export function TeamApplicationReview({ applicationId }: { applicationId: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -15,34 +15,16 @@ export function TeamApplicationReview({ applicationId, teamId, applicantId, role
     setError("");
     const supabase = createClient();
 
-    const { error: reviewError } = await supabase.from("team_applications").update({
-      status,
-      reviewed_at: new Date().toISOString(),
-    }).eq("id", applicationId);
+    // Database BEFORE UPDATE trigger validates ownership and performs membership upsert atomically.
+    const { data: updated, error: reviewError } = await supabase.from("team_applications").update({ status }).eq("id", applicationId).eq("status", "pending").select("id").maybeSingle();
 
-    if (reviewError) {
-      setError(reviewError.message);
+    if (reviewError || !updated) {
+      setError(reviewError?.message || "이미 처리된 지원입니다. 화면을 새로고침해 주세요.");
       setBusy(false);
       return;
     }
 
-    if (status === "accepted") {
-      const { error: memberError } = await supabase.from("team_members").upsert({
-        team_id: teamId,
-        user_id: applicantId,
-        role_name: roleName || "Member",
-        status: "active",
-        joined_at: new Date().toISOString(),
-        left_at: null,
-      }, { onConflict: "team_id,user_id" });
-
-      if (memberError) {
-        await supabase.from("team_applications").update({ status: "pending", reviewed_at: null }).eq("id", applicationId);
-        setError(memberError.message);
-        setBusy(false);
-        return;
-      }
-    }
+    // No second client write: either application and member both commit or both roll back.
 
     setBusy(false);
     router.refresh();

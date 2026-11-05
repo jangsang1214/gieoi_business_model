@@ -5,19 +5,21 @@ import { StartDmButton } from "@/components/start-dm-button";
 import { TeamProposalButton } from "@/components/team-proposal-button";
 import { RecordMedia } from "@/components/record-media";
 import { ActivityViewTracker } from "@/components/activity-tracker";
+import { FollowButton } from "@/components/follow-button";
 
 export default async function PublicProfile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase, userId } = await requireUser();
   if (id === userId) redirect("/profile");
 
-  const [{ data: profile }, { data: goals }, { data: proofs }, { data: records }, { data: memberships }, { data: myMemberships }] = await Promise.all([
+  const [{ data: profile }, { data: goals }, { data: proofs }, { data: records }, { data: memberships }, { data: myMemberships }, { data: existingFollow }] = await Promise.all([
     supabase.from("profiles").select("id,display_name,handle,headline,bio,primary_domains,open_to,discoverable,affiliation_name,affiliation_role,affiliation_visible").eq("id", id).maybeSingle(),
     supabase.from("goals").select("id,title,why,domain,target_date,status").eq("owner_id", id).eq("visibility", "public").order("created_at", { ascending: false }).limit(8),
     supabase.from("proofs").select("id,title,description,domain,happened_at").eq("owner_id", id).eq("visibility", "public").order("happened_at", { ascending: false }).limit(12),
     supabase.from("records").select("id,body,media,type,domain,occurred_at").eq("author_id", id).eq("visibility", "public").order("occurred_at", { ascending: false }).limit(12),
     supabase.from("team_members").select("team_id,role_name,status,teams(id,name,domain,mission)").eq("user_id", id).eq("status", "active"),
     supabase.from("team_members").select("teams(id,name)").eq("user_id", userId).eq("status", "active"),
+    supabase.from("follows").select("following_id").eq("follower_id", userId).eq("following_id",id).maybeSingle(),
   ]);
 
   if (!profile || !profile.discoverable) notFound();
@@ -35,7 +37,7 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
           <p>{profile.headline || profile.bio}</p>
           <div className="badges profile-domains">{(profile.primary_domains || []).slice(0,4).map((d:string)=><span className="badge" key={d}>{d.toUpperCase()}</span>)}</div>
           {(profile.open_to || []).length > 0 && <div className="open-to-line"><span>Open to</span>{profile.open_to.slice(0,4).map((x:string)=><b key={x}>{x}</b>)}</div>}
-          <div className="public-profile-actions"><StartDmButton me={userId} target={id} /><TeamProposalButton me={userId} target={id} teams={teams} /></div>
+          <div className="public-profile-actions"><FollowButton me={userId} target={id} initiallyFollowing={Boolean(existingFollow)} /><StartDmButton me={userId} target={id} /><TeamProposalButton me={userId} target={id} teams={teams} /></div>
         </div>
       </div>
     </header>

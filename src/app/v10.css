@@ -1,0 +1,26 @@
+/* GIEOI V10 — Closed beta social loop. Restrained, content-led interaction. */
+.follow-action{display:inline-flex;flex-direction:column;align-items:flex-start;gap:5px}
+.follow-action .btn{min-width:92px}
+.post-comment-link{display:inline-block;margin-top:10px;color:var(--pg-muted);font-size:11px;text-decoration:none}
+.post-comment-link:hover{color:var(--pg-text)}
+.record-comments-v10{padding:20px 18px 26px;margin:18px 0 34px;border:1px solid var(--pg-line);border-radius:14px;background:var(--pg-panel)}
+.record-comments-v10>header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--pg-line);padding-bottom:12px}
+.record-comments-v10 h2{margin:0;font-size:15px;letter-spacing:-.025em}
+.record-comments-v10 h2 span{font-size:12px;color:var(--pg-muted);font-weight:500}
+.record-comment-list{display:grid;gap:0}
+.record-comment{padding:14px 0;border-bottom:1px solid var(--pg-line)}
+.record-comment-author{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.record-comment-author>span{display:flex;align-items:center;gap:7px;min-width:0}
+.record-comment-author b{font-size:11px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.record-comment-author small,.record-comment-author time{font-size:9px;color:var(--pg-muted)}
+.record-comment p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.7;margin:7px 0}
+.record-comment>button{font-size:10px;color:var(--pg-muted);border:0;padding:0;background:none;cursor:pointer}
+.record-comment>button:hover{color:var(--pg-text)}
+.record-comment-empty{color:var(--pg-muted);font-size:12px;padding:12px 0}
+.record-comment-form{display:flex;flex-direction:column;gap:7px;margin-top:18px}
+.record-comment-form label{font-size:11px;color:var(--pg-muted)}
+.record-comment-form textarea{width:100%;border:1px solid var(--pg-line-strong);border-radius:9px;padding:12px;color:var(--pg-text);background:var(--pg-panel-2);resize:vertical;font-size:12px;line-height:1.6}
+.record-comment-form textarea:focus{outline:1px solid var(--pg-muted)}
+.record-comment-actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.record-comment-actions>span{font-size:9px;color:var(--pg-faint)}
+@media(max-width:560px){.record-comments-v10{padding:14px 12px 20px;border-radius:12px}.record-comment-author small{max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.public-profile-actions{align-items:flex-start}}

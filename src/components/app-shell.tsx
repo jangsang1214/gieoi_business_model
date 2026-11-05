@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { BottomNav, DesktopNav } from "./bottom-nav";
 import { RecordComposer } from "./record-composer";
+import { NotificationRealtime } from "./notification-realtime";
 
 export function AppShell({ children, userId, unreadCount = 0 }: { children: React.ReactNode; userId: string; unreadCount?: number }) {
   return (
     <div className="app-frame">
+      <NotificationRealtime userId={userId} />
       <aside className="desktop-rail">
         <Link href="/" className="rail-brand" aria-label="기어이 홈">기어이.</Link>
         <DesktopNav />
