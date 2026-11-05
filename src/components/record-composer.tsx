@@ -21,6 +21,7 @@ export function RecordComposer({ userId }: { userId: string }) {
   const [type, setType] = useState("journey");
   const [goalId, setGoalId] = useState("");
   const [teamId, setTeamId] = useState("");
+  const [visibility, setVisibility] = useState("public");
   const [goals, setGoals] = useState<LinkOption[]>([]);
   const [teams, setTeams] = useState<LinkOption[]>([]);
   const [files, setFiles] = useState<File[]>([]);
@@ -105,7 +106,7 @@ export function RecordComposer({ userId }: { userId: string }) {
 
       const { error: recordError } = await supabase.from("records").insert({
         id: recordId, author_id: userId, domain, type,
-        body: body.trim(), visibility: "public",
+        body: body.trim(), visibility,
         goal_id: goalId || null, team_id: teamId || null, media,
       });
       if (recordError) throw recordError;
@@ -117,7 +118,7 @@ export function RecordComposer({ userId }: { userId: string }) {
           title: body.trim().slice(0, 80) || "새로운 결과",
           description: body.trim(), record_id: recordId,
           goal_id: goalId || null, team_id: teamId || null,
-          visibility: "public",
+          visibility,
         }).select("id").single();
         if (proofError || !proof) throw proofError || new Error("Proof 저장에 실패했습니다.");
         const { error: provenanceError } = await supabase.from("proof_provenance").insert({ proof_id: proof.id, kind: "self" });
@@ -130,6 +131,7 @@ export function RecordComposer({ userId }: { userId: string }) {
       setBody("");
       setGoalId("");
       setTeamId("");
+      setVisibility("public");
       setFiles([]);
       setOpen(false);
       router.refresh();
@@ -177,8 +179,13 @@ export function RecordComposer({ userId }: { userId: string }) {
           </label>
           <div className="composer-links">
             <label className="field compact-field">Goal <span className="optional">선택</span><select value={goalId} onChange={(e) => setGoalId(e.target.value)} disabled={busy}><option value="">연결 안 함</option>{goals.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}</select></label>
-            <label className="field compact-field">TEAM <span className="optional">선택</span><select value={teamId} onChange={(e) => setTeamId(e.target.value)} disabled={busy}><option value="">연결 안 함</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+            <label className="field compact-field">TEAM <span className="optional">선택</span><select value={teamId} onChange={(e) => { setTeamId(e.target.value); if (!e.target.value && visibility === "team") setVisibility("public"); }} disabled={busy}><option value="">연결 안 함</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
           </div>
+          <label className="field compact-field">공개 범위<select value={visibility} onChange={(e) => setVisibility(e.target.value)} disabled={busy}>
+            <option value="public">전체 공개</option><option value="followers">팔로워 공개</option>
+            {teamId && <option value="team">TEAM 공개</option>}
+            <option value="private">나만 보기</option>
+          </select></label>
           <label className="field compact-field">분야<select value={domain} onChange={(e) => setDomain(e.target.value)} disabled={busy}>{domains.map((x) => <option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label>
           {err && <div className="error notice" role="alert">{err}</div>}
           <div className="row composer-actions">
