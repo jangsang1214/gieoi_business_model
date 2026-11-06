@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { MessageForm } from "@/components/message-form";
+import { ReportButton } from "@/components/report-button";
 
 export default async function Thread({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +20,7 @@ export default async function Thread({ params }: { params: Promise<{ id: string 
       const proposalTeamId = m.message_type === "team_proposal" ? m.payload?.team_id : null;
       const proposalTeamName = m.message_type === "team_proposal" ? m.payload?.team_name : null;
       return <div className={m.sender_id === userId ? "msg me" : "msg"} key={m.id}>
-        <div className="bubble">{proposalTeamId && <Link href={`/team/${proposalTeamId}`} className="proposal-chip">TEAM · {proposalTeamName || "제안"}</Link>}<div>{m.body}</div></div>
+        <div className="bubble">{proposalTeamId && <Link href={`/team/${proposalTeamId}`} className="proposal-chip">TEAM · {proposalTeamName || "제안"}</Link>}<div>{m.body}</div></div>{m.sender_id !== userId && <ReportButton userId={userId} targetType="message" targetId={m.id}/>} 
       </div>;
     })}</div>
     <MessageForm conversationId={id} userId={userId} />
