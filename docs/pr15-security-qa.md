@@ -3,7 +3,7 @@
 ## Shipped in this PR
 - TEAM application and reapplication use one Postgres transaction through `submit_team_application` (SECURITY INVOKER, authenticated only). Pending or accepted status returns the existing request; rejected/withdrawn requests may be replaced atomically.
 - `proofs.record_id` now cascades on Record deletion. Independent Proofs without a Record remain intact.
-- Record deletion writes media paths to `record_media_cleanup` for reconciliation if best-effort browser cleanup fails. The queue is RLS-protected and not accessible to ordinary users. **Queue processing is still an operational follow-up**, not automatic cleanup.
+- Record deletion writes media paths to `private.record_media_cleanup` for reconciliation if best-effort browser cleanup fails. The queue is stored in the private schema with RLS and is not accessible to ordinary users. **Queue processing is still an operational follow-up**, not automatic cleanup.
 - Reciprocal blocks are checked by a narrowly scoped DB helper using the current authenticated identity. Public profile, Record, Proof, Goal, Follow, comments and direct/request conversations respect blocks. TEAM group conversations remain accessible to their existing participants.
 - Blocking removes mutual follows.
 - User safety UI: block/unblock in profile/settings, report user/record/proof/TEAM/message.
@@ -27,12 +27,12 @@
 
 `select id,public from storage.buckets where id='record-media';` (must be false)
 
-`select count(*) from public.record_media_cleanup where cleaned_at is null;` (operations cleanup debt)
+`select count(*) from private.record_media_cleanup where cleaned_at is null;` (operations cleanup debt)
 
 `select tablename,policyname from pg_policies where schemaname='public' and tablename in ('profiles','records','proofs','goals','conversations','follows','record_comments');`
 
 ## Notes
 - The SQL has been applied to the linked production Supabase project. The app's Preview build only verifies compilation; it does not prove all user permissions work at runtime.
-- `record_media_cleanup` needs a scheduled privileged worker or manual reconciliation before full-scale public release. Do not delete queue entries without confirming the corresponding file was removed.
+- `private.record_media_cleanup` needs a scheduled privileged worker or manual reconciliation before full-scale public release. Do not delete queue entries without confirming the corresponding file was removed.
 - Supabase leaked-password protection remains an account-level dashboard setting.
 - Do not assume private buckets alone protect content: the application media endpoint and Postgres RLS must both authorize access.
