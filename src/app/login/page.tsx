@@ -8,33 +8,26 @@ export default async function LoginPage() {
   if (data?.claims?.sub) redirect("/");
 
   return (
-    <main className="login-shell">
-      <section className="login-story">
+    <main className="login-shell login-shell-v16">
+      <section className="login-story login-story-v16" aria-label="기어이 소개">
         <div className="login-brand">기어이.</div>
-
-        <div className="login-copy">
-          <span className="eyebrow">GIEOI / PROOF OF TRAJECTORY</span>
-          <h1>너는 어떻게<br />살아갈 것인가?</h1>
-          <p>기술은 대신할 수 있어도,<br />삶은 대신 살아줄 수 없습니다.</p>
+        <div className="login-copy login-copy-v16">
+          <span className="eyebrow">GIEOI</span>
+          <h1>지금 하는 일을 남기고,<br/>함께할 사람을 만나요.</h1>
+          <p>기록이 쌓이고, 새로운 연결이 시작되는 곳.</p>
         </div>
-
-        <div className="login-index" aria-label="기어이의 기록 구조">
-          <div><span>01</span><b>GOAL</b><em>어디로 향하는가</em></div>
-          <div><span>02</span><b>JOURNEY</b><em>어떻게 살아가는가</em></div>
-          <div><span>03</span><b>PROOF</b><em>무엇을 남겼는가</em></div>
-          <div><span>04</span><b>TEAM</b><em>누구와 함께하는가</em></div>
+        <div className="login-story-foot-v16">
+          <span>기록</span><span aria-hidden="true">·</span><span>발견</span>
+          <span aria-hidden="true">·</span><span>연결</span>
         </div>
-
-        <div className="login-signature">기어이, 우리가 꿈꾸던 곳까지.</div>
       </section>
 
-      <section className="login-entry">
+      <section className="login-entry login-entry-v16">
         <div className="login-entry-inner">
           <div className="login-mobile-brand">기어이.</div>
-          <div className="login-entry-head">
-            <span className="eyebrow">WELCOME</span>
-            <h2>살아온 것이<br />당신을 보여주도록.</h2>
-            <p>목표보다 과정이, 말보다 기록이 남는 네트워크.</p>
+          <div className="login-entry-head login-entry-head-v16">
+            <h2>기어이에 오신 걸 환영해요.</h2>
+            <p>계정에 로그인하고 이어서 기록해 보세요.</p>
           </div>
           <LoginForm />
         </div>
