@@ -32,45 +32,13 @@ export function TeamApplyButton({
     if (busy) return;
     setBusy(true);
     setError("");
-    const supabase = createClient();
-
-    let existingQuery = supabase
-      .from("team_applications")
-      .select("id,status")
-      .eq("team_id", teamId)
-      .eq("applicant_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    existingQuery = roleId ? existingQuery.eq("role_id", roleId) : existingQuery.is("role_id", null);
-    const { data: existing } = await existingQuery.maybeSingle();
-
-    if (existing?.status === "pending" || existing?.status === "accepted") {
-      setStatus(existing.status as ApplicationStatus);
-      setBusy(false);
-      setOpen(false);
-      return;
-    }
-
-    if (existing?.id) {
-      const { data: removed, error: removeError } = await supabase.from("team_applications")
-        .delete().eq("id", existing.id).select("id").maybeSingle();
-      if (removeError || !removed) {
-        setError(removeError?.message || "재지원 준비가 실패했습니다.");
-        setBusy(false);
-        return;
-      }
-    }
-
     const why = String(fd.get("why") || "").trim();
     const weeklyRaw = Number(fd.get("weekly_hours") || 0);
-    const { error: insertError } = await supabase.from("team_applications").insert({
-      team_id: teamId,
-      role_id: roleId || null,
-      applicant_id: userId,
-      why: why || "이 TEAM에서 함께 해내고 싶습니다.",
-      proof_urls: [],
-      weekly_hours: weeklyRaw > 0 ? weeklyRaw : null,
-      status: "pending",
+    const { data, error: insertError } = await createClient().rpc("submit_team_application", {
+      p_team_id: teamId,
+      p_role_id: roleId || null,
+      p_why: why || null,
+      p_weekly_hours: Number.isFinite(weeklyRaw) && weeklyRaw > 0 ? weeklyRaw : null,
     });
 
     setBusy(false);
@@ -78,7 +46,7 @@ export function TeamApplyButton({
       setError(insertError.message);
       return;
     }
-    setStatus("pending");
+    setStatus(data?.status === "accepted" ? "accepted" : "pending");
     setOpen(false);
     router.refresh();
   }

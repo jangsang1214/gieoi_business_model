@@ -6,6 +6,8 @@ import { TeamProposalButton } from "@/components/team-proposal-button";
 import { RecordMedia } from "@/components/record-media";
 import { ActivityViewTracker } from "@/components/activity-tracker";
 import { FollowButton } from "@/components/follow-button";
+import { BlockUserButton } from "@/components/block-user-button";
+import { ReportButton } from "@/components/report-button";
 
 export default async function PublicProfile({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -37,7 +39,7 @@ export default async function PublicProfile({ params }: { params: Promise<{ id: 
           <p>{profile.headline || profile.bio}</p>
           <div className="badges profile-domains">{(profile.primary_domains || []).slice(0,4).map((d:string)=><span className="badge" key={d}>{d.toUpperCase()}</span>)}</div>
           {(profile.open_to || []).length > 0 && <div className="open-to-line"><span>Open to</span>{profile.open_to.slice(0,4).map((x:string)=><b key={x}>{x}</b>)}</div>}
-          <div className="public-profile-actions"><FollowButton me={userId} target={id} initiallyFollowing={Boolean(existingFollow)} /><StartDmButton me={userId} target={id} /><TeamProposalButton me={userId} target={id} teams={teams} /></div>
+          <div className="public-profile-actions"><FollowButton me={userId} target={id} initiallyFollowing={Boolean(existingFollow)} /><StartDmButton me={userId} target={id} /><TeamProposalButton me={userId} target={id} teams={teams} /><BlockUserButton userId={userId} targetId={id} /><ReportButton userId={userId} targetType="user" targetId={id} /></div>
         </div>
       </div>
     </header>

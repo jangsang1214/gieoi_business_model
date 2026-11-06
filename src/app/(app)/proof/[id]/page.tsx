@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { RecordMedia } from "@/components/record-media";
 import { ActivityViewTracker } from "@/components/activity-tracker";
+import { ReportButton } from "@/components/report-button";
 
 export default async function ProofDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,6 +40,7 @@ export default async function ProofDetail({ params }: { params: Promise<{ id: st
       </div>
       <div className="context-owner-block">
         <span className="proof-level">{level}</span>
+        {proof.owner_id !== userId && <ReportButton userId={userId} targetType="proof" targetId={id}/>} 
         {owner && <Link href={`/profile/${owner.id}`} className="context-owner-link"><b>{owner.display_name}</b><span>@{owner.handle || "gieoi"}</span></Link>}
       </div>
     </header>

@@ -8,6 +8,7 @@ import { TeamApplicationReview } from "@/components/team-application-review";
 import { ComposeLinkButton } from "@/components/compose-link-button";
 import { RecordMedia } from "@/components/record-media";
 import { ActivityViewTracker } from "@/components/activity-tracker";
+import { ReportButton } from "@/components/report-button";
 
 export default async function TeamDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -48,6 +49,7 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
         <h1>{team.name}</h1>
         <p>{team.mission}</p>
       </div>
+      {!isOwner && <ReportButton userId={userId} targetType="team" targetId={id}/>} 
       <div className="badges"><span className="badge">{String(team.domain).toUpperCase()}</span>{team.current_stage && <span className="badge">{team.current_stage}</span>}{isMember && <span className="badge">MEMBER</span>}</div>
     </header>
 
