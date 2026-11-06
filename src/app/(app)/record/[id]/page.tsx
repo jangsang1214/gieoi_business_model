@@ -6,6 +6,7 @@ import { ActivityViewTracker } from "@/components/activity-tracker";
 import { RecordComments } from "@/components/record-comments";
 import { RecordOwnerActions } from "@/components/record-owner-actions";
 import { RecordDeleteButton } from "@/components/record-delete-button";
+import { ReportButton } from "@/components/report-button";
 
 export default async function RecordDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,6 +44,7 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
       </div>
       {record.body && <p className="record-detail-body">{record.body}</p>}
       <RecordMedia media={record.media}/>
+      {record.author_id !== userId && <ReportButton userId={userId} targetType="record" targetId={id}/>} 
       {record.author_id === userId && <div className="record-owner-actions">
         <RecordOwnerActions recordId={record.id} authorId={userId} initialBody={record.body}
           initialVisibility={record.visibility} hasTeam={Boolean(record.team_id)}/>
