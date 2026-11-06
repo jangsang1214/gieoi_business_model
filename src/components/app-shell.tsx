@@ -34,21 +34,7 @@ export function AppShell({ children, userId, unreadCount = 0 }: { children: Reac
         <BottomNav />
       </div>
 
-      <aside className="desktop-context">
-        <div className="context-card action-context">
-          <div className="eyebrow">DISCOVER</div>
-          <h4>같이 좋아하는 사람보다,<br />같이 갈 사람.</h4>
-          <p>사람, TEAM, Goal과 Proof를 실제 궤적으로 탐색합니다.</p>
-          <Link href="/explore" className="context-link">탐색하기 →</Link>
-        </div>
-        <div className="context-card action-context">
-          <div className="eyebrow">OPPORTUNITY</div>
-          <h4>살아온 것이<br />기회가 되도록.</h4>
-          <p>당신의 Proof와 방향에 맞는 TEAM, 프로젝트와 기회를 확인합니다.</p>
-          <Link href="/opportunity" className="context-link">기회 보기 →</Link>
-        </div>
-        <div className="context-foot">기어이 · Proof of Trajectory</div>
-      </aside>
+
     </div>
   );
 }
