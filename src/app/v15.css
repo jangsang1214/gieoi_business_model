@@ -1,0 +1,12 @@
+/* V15 · Safety & Data Integrity */
+.safety-action{display:inline-flex;position:relative;flex-direction:column;gap:8px;max-width:100%}
+.safety-action .quiet-link{border:0;background:transparent;color:var(--pg-muted);font-size:11px;cursor:pointer;padding:7px 4px;text-decoration:underline;text-underline-offset:3px}
+.safety-action .quiet-link:hover{color:var(--pg-text)}
+.safety-report-panel{z-index:4;display:grid;gap:10px;border:1px solid var(--pg-line);border-radius:10px;padding:12px;background:var(--pg-panel);min-width:min(320px,80vw);box-shadow:0 12px 28px rgba(0,0,0,.15)}
+.safety-report-panel .field{display:grid;gap:6px;font-size:11px}
+.safety-report-panel select,.safety-report-panel textarea{width:100%;border:1px solid var(--pg-line-strong);border-radius:8px;background:var(--pg-panel-2);color:var(--pg-text);padding:9px;font-size:12px}
+.safety-report-panel textarea{resize:vertical}
+.blocked-users-v15{margin:18px 0}
+.blocked-user-row{padding:11px 0;border-top:1px solid var(--pg-line);display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;color:var(--pg-muted)}
+.blocked-user-row span:first-child{overflow-wrap:anywhere}
+@media(max-width:560px){.blocked-user-row{align-items:flex-start}.safety-report-panel{min-width:0;width:100%}}
