@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { OpportunityCreator } from "@/components/opportunity-creator";
 import { RecommendationActions } from "@/components/recommendation-actions";
@@ -39,7 +40,7 @@ export default async function OpportunityPage() {
             </div>
             <p className="match-mission">{o.description}</p>
             <div className="match-card-actions">
-              <button className="btn primary">기회 보기</button>
+              <Link className="btn primary" href={`/opportunity/${o.id}`}>기회 보기</Link>
               <RecommendationActions userId={userId} targetType="opportunity" targetId={o.id} initialState={(fmap.get(o.id) as "saved" | "dismissed" | undefined) ?? null} />
             </div>
           </article>
@@ -49,10 +50,10 @@ export default async function OpportunityPage() {
       {rising?.length ? <section className="discover-section opportunity-rising">
         <div className="section-title-row"><div><span>RISING TEAMS</span><h2>지금 움직이는 TEAM</h2></div></div>
         <div className="team-discovery-list">{rising.map((t: any) => (
-          <article className="discover-row" key={t.team_id}>
+          <Link href={`/team/${t.team_id}`} className="discover-row" key={t.team_id}>
             <div className="discover-symbol">T</div>
             <div className="grow"><div className="row-title"><b>{t.name}</b><span>{String(t.domain).toUpperCase()}</span></div><div className="meta">최근 Proof {t.proof_count_30d ?? 0} · {t.continuity_months ?? 0}개월 지속</div></div>
-          </article>
+          </Link>
         ))}</div>
       </section> : null}
     </>
