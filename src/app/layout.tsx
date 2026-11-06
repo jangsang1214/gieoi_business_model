@@ -12,6 +12,7 @@ import "./v8.css";
 import "./v9.css";
 import "./v10.css";
 import "./v11.css";
+import "./v15.css";
 
 const sans = Noto_Sans_KR({
   variable: "--font-gieoi-sans",
