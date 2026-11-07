@@ -25,7 +25,7 @@ export default async function GoalDetail({ params }: { params: Promise<{ id: str
         {goal.why && <p>{goal.why}</p>}
       </div>
       <div className="context-owner-block">
-        {owner && <Link href={`/profile/${owner.id}`} className="context-owner-link"><b>{owner.display_name}</b><span>@{owner.handle || "gieoi"}</span></Link>}
+        {owner && <Link href={`/profile/${owner.id}`} className="context-owner-link"><b>{owner.display_name}</b><span>@{owner.handle || "user"}</span></Link>}
         {team && <Link href={`/team/${team.id}`} className="chip">TEAM · {team.name}</Link>}
       </div>
     </header>
