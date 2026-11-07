@@ -65,7 +65,7 @@ export default async function TeamDetail({ params }: { params: Promise<{ id: str
 
     <section className="discover-section">
       <div className="section-title-row"><div><span>PEOPLE</span><h2>{members?.length || 0}명이 함께하고 있습니다</h2></div></div>
-      <div className="people-grid">{(members || []).map((m: any) => { const p = pmap.get(m.user_id); return <Link href={m.user_id === userId ? "/profile" : `/profile/${m.user_id}`} className="person-card" key={m.user_id}><div className="person-top"><div className="avatar large">{String(p?.display_name || "?").slice(0,1)}</div><div><h3>{p?.display_name || "기어이 사용자"}</h3><div className="meta">{m.role_name}</div></div></div>{p?.affiliation_name && <p>{p.affiliation_name}{p.affiliation_role ? ` · ${p.affiliation_role}` : ""}</p>}</Link>; })}</div>
+      <div className="people-grid">{(members || []).map((m: any) => { const p = pmap.get(m.user_id); return <Link href={m.user_id === userId ? "/profile" : `/profile/${m.user_id}`} className="person-card" key={m.user_id}><div className="person-top"><div className="avatar large">{String(p?.display_name || "?").slice(0,1)}</div><div><h3>{p?.display_name || "프로프 사용자"}</h3><div className="meta">{m.role_name}</div></div></div>{p?.affiliation_name && <p>{p.affiliation_name}{p.affiliation_role ? ` · ${p.affiliation_role}` : ""}</p>}</Link>; })}</div>
     </section>
 
     <section className="discover-section">
