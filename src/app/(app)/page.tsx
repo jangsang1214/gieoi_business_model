@@ -72,7 +72,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <div className="post-head">
             <Link href={profileHref} className="avatar-link"><div className="avatar">{String(r.profiles?.display_name || "?").slice(0, 1)}</div></Link>
             <div className="grow">
-              <div className="post-user-line"><Link href={profileHref}><b>{r.profiles?.display_name || r.profiles?.handle || "기어이 사용자"}</b></Link>{r.profiles?.handle && <span>@{r.profiles.handle}</span>}</div>
+              <div className="post-user-line"><Link href={profileHref}><b>{r.profiles?.display_name || r.profiles?.handle || "프로프 사용자"}</b></Link>{r.profiles?.handle && <span>@{r.profiles.handle}</span>}</div>
               <div className="meta">{new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div>
             </div>
             <div className="type-tag">{String(r.domain).toUpperCase()}{r.type === "proof" && <span>PROOF</span>}</div>
