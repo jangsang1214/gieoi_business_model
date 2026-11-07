@@ -52,7 +52,7 @@ export function LoginForm() {
         router.refresh();
       } else {
         setOk(true);
-        setMsg("확인 메일을 보냈습니다. 메일의 링크를 누르면 기어이가 시작됩니다.");
+        setMsg("확인 메일을 보냈습니다. 메일의 링크를 누르면 프로프가 시작됩니다.");
       }
     }
 
@@ -105,13 +105,13 @@ export function LoginForm() {
       </form>
 
       <div className="auth-switch">
-        <span>{mode === "login" ? "기어이가 처음인가요?" : "이미 계정이 있나요?"}</span>
+        <span>{mode === "login" ? "프로프가 처음인가요?" : "이미 계정이 있나요?"}</span>
         <button type="button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>
           {mode === "login" ? "가입하기" : "로그인"}
         </button>
       </div>
 
-      <p className="auth-footnote">계속하면 기어이의 이용약관 및 개인정보 처리방침에 동의하게 됩니다.</p>
+      <p className="auth-footnote">계속하면 프로프의 이용약관 및 개인정보 처리방침에 동의하게 됩니다.</p>
     </div>
   );
 }
