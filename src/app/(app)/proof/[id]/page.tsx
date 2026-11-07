@@ -41,7 +41,7 @@ export default async function ProofDetail({ params }: { params: Promise<{ id: st
       <div className="context-owner-block">
         <span className="proof-level">{level}</span>
         {proof.owner_id !== userId && <ReportButton userId={userId} targetType="proof" targetId={id}/>} 
-        {owner && <Link href={`/profile/${owner.id}`} className="context-owner-link"><b>{owner.display_name}</b><span>@{owner.handle || "gieoi"}</span></Link>}
+        {owner && <Link href={`/profile/${owner.id}`} className="context-owner-link"><b>{owner.display_name}</b><span>@{owner.handle || "user"}</span></Link>}
       </div>
     </header>
 
