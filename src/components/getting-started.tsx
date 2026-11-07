@@ -9,7 +9,7 @@ export function GettingStarted({ hasDomain, hasGoal, hasRecord }: { hasDomain: b
   useEffect(() => { setHidden(window.localStorage.getItem("gieoi:hide-start") === "1"); }, []);
   if (finished || hidden) return null;
   const steps = [hasDomain, hasGoal, hasRecord].filter(Boolean).length;
-  return <section className="getting-started-v9" aria-label="기어이 시작하기">
+  return <section className="getting-started-v9" aria-label="프로프 시작하기">
     <div className="getting-started-heading"><div><span className="mini-label">GET STARTED · {steps}/3</span><h2>시작하기</h2></div>
       <button type="button" aria-label="시작하기 안내 닫기" onClick={() => { window.localStorage.setItem("gieoi:hide-start", "1"); setHidden(true); }}>×</button>
     </div>
