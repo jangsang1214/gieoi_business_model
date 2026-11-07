@@ -120,19 +120,19 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
     ...records.map((r:any)=>({
       id:r.id,kind:"record" as const,domain:r.domain,date:r.occurred_at,body:r.body,media:r.media,
       href:`/record/${r.id}`,authorId:r.author_id,
-      authorName:r.profiles?.display_name||r.profiles?.handle||"기어이 사용자",
+      authorName:r.profiles?.display_name||r.profiles?.handle||"프로프 사용자",
       authorHandle:r.profiles?.handle||null,meta:"기록",
     })),
     ...proofs.map((p:any)=>{
       const owner=ownerMap.get(p.owner_id) as any;
       return {id:p.id,kind:"proof" as const,domain:p.domain,date:p.happened_at,title:p.title,body:p.description,
-        href:`/proof/${p.id}`,authorId:p.owner_id,authorName:owner?.display_name||owner?.handle||"기어이 사용자",
+        href:`/proof/${p.id}`,authorId:p.owner_id,authorName:owner?.display_name||owner?.handle||"프로프 사용자",
         authorHandle:owner?.handle||null,meta:"Proof"};
     }),
     ...goals.map((g:any)=>{
       const owner=ownerMap.get(g.owner_id) as any;
       return {id:g.id,kind:"goal" as const,domain:g.domain,date:g.created_at,title:g.title,body:g.why,
-        href:`/goal/${g.id}`,authorId:g.owner_id,authorName:owner?.display_name||owner?.handle||"기어이 사용자",
+        href:`/goal/${g.id}`,authorId:g.owner_id,authorName:owner?.display_name||owner?.handle||"프로프 사용자",
         authorHandle:owner?.handle||null,meta:g.current_stage||"Goal"};
     }),
     ...teams.map((t:any)=>{
@@ -142,8 +142,8 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
     }),
     ...people.map((p:any)=>({
       id:p.id,kind:"person" as const,domain:p.primary_domains?.[0]||"people",date:p.created_at,
-      title:p.display_name||p.handle||"기어이 사용자",body:p.headline||p.bio||"지금 하고 있는 일을 확인해 보세요.",
-      href:`/profile/${p.id}`,authorId:p.id,authorName:p.display_name||p.handle||"기어이 사용자",
+      title:p.display_name||p.handle||"프로프 사용자",body:p.headline||p.bio||"지금 하고 있는 일을 확인해 보세요.",
+      href:`/profile/${p.id}`,authorId:p.id,authorName:p.display_name||p.handle||"프로프 사용자",
       authorHandle:p.handle||null,meta:"사람",
     })),
   ];
@@ -217,10 +217,10 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
           </Link>
           <div className="tile-bottom">
             {item.kind==="person" ? <span className="tile-author"><i>{String(item.authorName||"?").slice(0,1)}</i>
-              <span><b>{item.authorName}</b><small>@{item.authorHandle||"gieoi"}</small></span></span>
+              <span><b>{item.authorName}</b><small>@{item.authorHandle||"user"}</small></span></span>
               : item.authorId ? <Link className="tile-author" href={`/profile/${item.authorId}`} aria-label={`${item.authorName||"작성자"} 프로필`}>
                 <i>{String(item.authorName||"?").slice(0,1)}</i>
-                <span><b>{item.authorName||"기어이 사용자"}</b>{item.authorHandle&&<small>@{item.authorHandle}</small>}</span>
+                <span><b>{item.authorName||"프로프 사용자"}</b>{item.authorHandle&&<small>@{item.authorHandle}</small>}</span>
               </Link> : <span className="tile-author"><i>T</i><span><b>TEAM</b></span></span>}
             <span className="tile-meta">{item.meta}</span>
           </div>
