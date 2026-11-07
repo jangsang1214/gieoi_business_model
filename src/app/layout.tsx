@@ -30,7 +30,7 @@ const serif = Noto_Serif_KR({
 });
 
 export const metadata: Metadata = {
-  title: "기어이 — 살아온 방식으로 만나다",
+  title: "prof. — 살아온 방식으로 만나다",
   description: "실제로 살아온 방향과 Proof로 사람, TEAM, 기회를 연결하는 네트워크",
 };
 
