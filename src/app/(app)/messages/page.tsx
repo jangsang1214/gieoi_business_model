@@ -44,7 +44,7 @@ export default async function Messages({ searchParams }: { searchParams: Promise
       <section className="discover-section inbox-people">
         <div className="section-title-row"><div><span>PEOPLE</span><h2>사람</h2></div><Link href="/explore" className="quiet-link">더 보기</Link></div>
         {people?.length ? <div className="people-grid">{people.map((p: any) => (
-          <article className="person-card" key={p.id}><Link href={`/profile/${p.id}`} className="person-card-link"><div className="person-top"><div className="avatar large">{String(p.display_name || "?").slice(0, 1)}</div><div className="grow"><h3>{p.display_name || "기어이 사용자"}</h3><div className="meta">{p.headline || ""}</div></div></div></Link><div className="person-action"><StartDmButton me={userId} target={p.id} /></div></article>
+          <article className="person-card" key={p.id}><Link href={`/profile/${p.id}`} className="person-card-link"><div className="person-top"><div className="avatar large">{String(p.display_name || "?").slice(0, 1)}</div><div className="grow"><h3>{p.display_name || "프로프 사용자"}</h3><div className="meta">{p.headline || ""}</div></div></div></Link><div className="person-action"><StartDmButton me={userId} target={p.id} /></div></article>
         ))}</div> : null}
       </section>
     </>
