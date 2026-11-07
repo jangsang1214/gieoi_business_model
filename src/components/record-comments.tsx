@@ -51,7 +51,7 @@ export function RecordComments({ recordId, userId, recordOwnerId, initial }: {
         const map = new Map((authors || []).map((author) => [author.id, author]));
         setComments(data.map((item) => ({
           ...item,
-          authorName: map.get(item.author_id)?.display_name || "기어이 사용자",
+          authorName: map.get(item.author_id)?.display_name || "프로프 사용자",
           authorHandle: map.get(item.author_id)?.handle || null,
         })));
       }

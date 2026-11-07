@@ -1,6 +1,8 @@
-# 기어이 — Actual App MVP
+# prof. (프로프) — Actual App MVP
 
-기어이의 실제 서비스 MVP입니다. Next.js + React + Supabase SSR로 구성되어 있습니다.
+prof.(프로프)의 실제 서비스 MVP입니다. Next.js + React + Supabase SSR로 구성되어 있습니다.
+
+> 공개 브랜드: **prof. (프로프)**. 기존 GitHub 저장소명, Supabase 프로젝트/테이블명, 내부 이벤트 키 및 배포 도메인은 호환성을 위해 그대로 유지합니다. 상표·도메인 사용 가능성 검토는 별도입니다.
 
 ## 현재 구현
 

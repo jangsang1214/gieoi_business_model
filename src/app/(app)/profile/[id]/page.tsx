@@ -63,7 +63,7 @@ export default async function PublicProfile({params}:{params:Promise<{id:string}
         <div className="profile-avatar-xl">{String(profile.display_name||"?").slice(0,1)}</div>
         <div className="profile-identity">
           <div className="profile-name-line"><h1>{profile.display_name}</h1></div>
-          <div className="profile-handle">@{profile.handle||"gieoi"}</div>
+          <div className="profile-handle">@{profile.handle||"user"}</div>
           {profile.affiliation_visible&&profile.affiliation_name&&<div className="profile-affiliation"><b>{profile.affiliation_name}</b>{profile.affiliation_role&&<span> · {profile.affiliation_role}</span>}</div>}
           <p>{profile.headline||profile.bio}</p>
           <div className="badges profile-domains">{(profile.primary_domains||[]).slice(0,4).map((d:string)=><span className="badge" key={d}>{d.toUpperCase()}</span>)}</div>

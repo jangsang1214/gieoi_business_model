@@ -74,7 +74,7 @@ export default async function Profile() {
         <div className="profile-avatar-xl">{String(displayName).slice(0,1)}</div>
         <div className="profile-identity">
           <div className="profile-name-line"><h1>{displayName}</h1><Link href="/settings" className="profile-edit">프로필 편집</Link></div>
-          <div className="profile-handle">@{p.handle||"gieoi"}</div>
+          <div className="profile-handle">@{p.handle||"user"}</div>
           {affiliation&&<div className="profile-affiliation">{affiliation}</div>}
           <p>{p.headline||"지금 하고 있는 일을 한 줄로 소개해 보세요."}</p>
           <div className="badges profile-domains">{(p.primary_domains||[]).slice(0,3).map((d:string)=><span className="badge" key={d}>{d.toUpperCase()}</span>)}</div>

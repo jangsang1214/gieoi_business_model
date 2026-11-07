@@ -29,7 +29,7 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
     : { data: [] as { id: string; display_name: string | null; handle: string | null }[] };
   const authorMap = new Map((commentAuthors || []).map((person) => [person.id, person]));
   const initialComments = (comments || []).map((comment) => ({ ...comment,
-    authorName: authorMap.get(comment.author_id)?.display_name || "기어이 사용자",
+    authorName: authorMap.get(comment.author_id)?.display_name || "프로프 사용자",
     authorHandle: authorMap.get(comment.author_id)?.handle || null,
   }));
   return <>
@@ -38,7 +38,7 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
     <article className="record-detail-v9">
       <div className="record-detail-author">
         <Link href={profileHref} className="avatar">{String(author?.display_name || "?").slice(0,1)}</Link>
-        <div><Link href={profileHref}><b>{author?.display_name || "기어이 사용자"}</b></Link>
+        <div><Link href={profileHref}><b>{author?.display_name || "프로프 사용자"}</b></Link>
         <div className="meta">{new Date(record.occurred_at).toLocaleDateString("ko-KR")} · {String(record.domain).toUpperCase()}</div></div>
         {record.type === "proof" && <span className="proof-level">PROOF</span>}
       </div>

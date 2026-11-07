@@ -100,7 +100,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
       <section className="settings-card">
         <div className="settings-heading"><div><span>01</span><h3>프로필</h3></div></div>
         <label className="field"><span>이름</span><input name="display_name" defaultValue={profile.display_name ?? ""} placeholder="당신의 이름" /></label>
-        <label className="field"><span>아이디</span><div className="input-prefix"><b>@</b><input name="handle" defaultValue={profile.handle ?? ""} placeholder="gieoi" /></div></label>
+        <label className="field"><span>아이디</span><div className="input-prefix"><b>@</b><input name="handle" defaultValue={profile.handle ?? ""} placeholder="yourname" /></div></label>
         <label className="field"><span>한 줄 소개</span><input name="headline" defaultValue={profile.headline ?? ""} placeholder="지금 무엇을 하고 있나요?" maxLength={90} /></label>
         <label className="field"><span>소개</span><textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} placeholder="필요한 만큼만 적어주세요." maxLength={280} /></label>
       </section>
