@@ -22,7 +22,7 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
     supabase.from("recommendation_feedback").select("state").eq("user_id", userId)
       .eq("target_type", "opportunity").eq("target_id", id).maybeSingle(),
   ]);
-  const signals = { ...direction, preferred_domains: [...new Set([
+  const signals = { ...(direction ?? {}), preferred_domains: [...new Set([
     ...(direction?.preferred_domains ?? []), ...(ownProfile?.primary_domains ?? []),
   ])] };
   const reasons = opportunityReasons(signals, opportunity);
