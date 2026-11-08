@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { OpportunityInquiryButton } from "@/components/opportunity-inquiry-button";
+import { OpportunityApplicationForm } from "@/components/opportunity-application-form";
 import { RecommendationActions } from "@/components/recommendation-actions";
 import { opportunityDomainLabel, opportunityKindLabel, opportunityReasons } from "@/lib/opportunity";
 
@@ -15,12 +16,16 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
     .maybeSingle();
   if (!opportunity) notFound();
 
-  const [{ data: owner }, { data: direction }, { data: ownProfile }, { data: feedback }] = await Promise.all([
+  const [{ data: owner }, { data: direction }, { data: ownProfile }, { data: feedback }, { data: application }, { data: myProofs }] = await Promise.all([
     supabase.from("profiles").select("id,display_name,handle,discoverable").eq("id", opportunity.created_by).maybeSingle(),
     supabase.from("direction_profiles").select("future_tags,skill_tags,preferred_domains").eq("user_id", userId).maybeSingle(),
     supabase.from("profiles").select("primary_domains").eq("id", userId).maybeSingle(),
     supabase.from("recommendation_feedback").select("state").eq("user_id", userId)
       .eq("target_type", "opportunity").eq("target_id", id).maybeSingle(),
+    supabase.from("opportunity_applications").select("id,status")
+      .eq("opportunity_id", id).eq("applicant_id", userId).maybeSingle(),
+    supabase.from("proofs").select("id,title").eq("owner_id", userId)
+      .eq("visibility", "public").order("happened_at", { ascending: false }).limit(40),
   ]);
   const signals = { ...(direction ?? {}), preferred_domains: [...new Set([
     ...(direction?.preferred_domains ?? []), ...(ownProfile?.primary_domains ?? []),
@@ -67,6 +72,10 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
       </div>}
 
       <div className="opportunity-detail-actions-v16">
+        {!isOwner && <OpportunityApplicationForm userId={userId} opportunityId={id}
+          application={application as { id: string; status: "pending" | "accepted" | "rejected" | "withdrawn" } | null}
+          proofs={myProofs ?? []}/>}
+        {isOwner && <Link className="btn primary" href={`/opportunity/${id}/applications`}>지원자 관리</Link>}
         {canContact && <OpportunityInquiryButton userId={userId} ownerId={opportunity.created_by}
           opportunityId={id} opportunityTitle={opportunity.title}/>}
         {owner?.discoverable && <Link className="btn secondary"
@@ -77,7 +86,10 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
       {isOwner && <p className="meta">내가 등록한 기회입니다.</p>}
       {!isOwner && !canContact && <p className="meta">현재 등록자에게 직접 메시지를 보낼 수 없습니다.</p>}
       <p className="meta">게시된 내용은 등록자가 작성한 정보입니다. 기관 인증 표시가 없으면 공식 인증이 확인되지 않았습니다.</p>
-      <Link href="/opportunity" className="inline-action">다른 기회 보기 →</Link>
+      <div className="opportunity-detail-footer-links">
+        <Link href="/opportunity/applications" className="inline-action">내 지원 현황 →</Link>
+        <Link href="/opportunity" className="inline-action">다른 기회 보기 →</Link>
+      </div>
     </article>
   </>;
 }
