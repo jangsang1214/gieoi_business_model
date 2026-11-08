@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { GoalForm } from "@/components/goal-form";
 import { DirectionEditor } from "@/components/direction-editor";
 import { ProfileTabs } from "@/components/profile-tabs";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 const level = (rows: any[] = []) =>
   rows.some(x=>x.kind==="organization_verified"&&x.verified_at) ? "ORG VERIFIED"
@@ -71,7 +72,7 @@ export default async function Profile() {
   return <>
     <header className="profile-v2-head">
       <div className="profile-v2-main">
-        <div className="profile-avatar-xl">{String(displayName).slice(0,1)}</div>
+        <ProfileAvatar userId={p.avatar_url ? userId : null} name={displayName} size="xl" version={p.avatar_url}/>
         <div className="profile-identity">
           <div className="profile-name-line"><h1>{displayName}</h1><Link href="/settings" className="profile-edit">프로필 편집</Link></div>
           <div className="profile-handle">@{p.handle||"user"}</div>
