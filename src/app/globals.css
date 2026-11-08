@@ -68,3 +68,28 @@ svg{display:block}.hidden{display:none!important}
 .settings-hero{padding-bottom:26px}.settings-stack{padding:14px 14px 36px;display:grid;gap:12px}.settings-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:17px}.identity-card{display:flex;align-items:center;gap:14px;background:linear-gradient(130deg,rgba(163,177,145,.09),transparent 58%),var(--surface)}.settings-avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accentText);font-family:var(--serif);font-size:22px}.identity-card h2{font-family:var(--serif);font-size:22px;font-weight:500;letter-spacing:-.03em;margin:4px 0 2px}.identity-card p{font-size:10px;color:var(--muted);margin:0}.settings-heading{margin-bottom:16px}.settings-heading>div{display:flex;align-items:center;gap:9px}.settings-heading span{font-size:9px;color:var(--muted2);font-weight:800;letter-spacing:.1em}.settings-heading h3{font-family:var(--serif);font-size:20px;font-weight:500;margin:0}.settings-heading p,.setting-row-card>div>p{font-size:10px;color:var(--muted);line-height:1.6;margin:7px 0 0}.settings-heading.inline{margin:0}.choice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.choice-grid.compact{grid-template-columns:repeat(3,1fr)}.choice{min-height:43px;border:1px solid var(--line);background:#0d0f0c;color:var(--muted);border-radius:11px;font-size:9px;font-weight:800;letter-spacing:.04em}.choice.active{background:var(--accent);border-color:var(--accent);color:var(--accentText)}.setting-row-card{display:flex;align-items:center;justify-content:space-between;gap:18px}.setting-row-card>div{flex:1}.switch{width:48px;height:28px;padding:3px;border:1px solid var(--line-strong);background:#0d0f0c;border-radius:999px;flex:0 0 auto}.switch span{display:block;width:20px;height:20px;border-radius:50%;background:#5f655c;transition:.18s ease}.switch.on{background:var(--accent);border-color:var(--accent)}.switch.on span{transform:translateX(20px);background:var(--accentText)}.settings-save{height:48px;margin:3px 0 6px}.account-card{margin-top:10px}.account-email{display:grid;gap:4px;margin-bottom:14px}.account-email span{font-size:8px;color:var(--muted2);letter-spacing:.14em;font-weight:800}.account-email b{font-size:12px;font-weight:650}
 
 @media(max-width:420px){.section h1,.page-hero h1{font-size:31px}.choice-grid.compact{grid-template-columns:repeat(2,1fr)}.composer-grid{grid-template-columns:1fr}.login-entry{padding:26px 18px}.login-mobile-brand{margin-bottom:44px}}
+
+
+
+/* prof. Opportunity revival: compact search and evidence-led recommendation */
+.opportunity-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(112px,1fr) minmax(122px,1fr) auto;gap:9px;align-items:end;padding:16px;margin:0 14px 8px;border-bottom:1px solid var(--line)}
+.opportunity-filters .field{min-width:0;margin:0}
+.opportunity-filters .field>span{display:block;margin-bottom:6px}
+.opportunity-filters input,.opportunity-filters select{width:100%;min-width:0}
+.opportunity-filter-submit{white-space:nowrap;min-height:40px}
+.opportunity-match-reason{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:10px 0;font-size:11px;line-height:1.55;color:var(--muted)}
+.opportunity-match-reason b{color:var(--accent);font-size:10px}
+.opportunity-detail-match{padding:14px 16px;margin:12px 0 18px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.opportunity-detail-match h2{font-size:14px;margin:0 0 7px}
+.opportunity-detail-match ul{margin:0;padding-left:18px;color:var(--text);font-size:12px;line-height:1.9}
+.opportunity-detail-match .meta{margin-top:8px}
+@media(max-width:620px){
+  .opportunity-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:14px 0;margin:0 14px 8px}
+  .opportunity-search-field{grid-column:1 / -1}
+  .opportunity-filter-submit{grid-column:1 / -1}
+}
+@media(max-width:360px){
+  .bottom-nav{padding-left:2px;padding-right:2px}
+  .bottom-nav a{font-size:9px;letter-spacing:-.025em}
+  .bottom-nav .nav-icon svg{width:19px;height:19px}
+}
