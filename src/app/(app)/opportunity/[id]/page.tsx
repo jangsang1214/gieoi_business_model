@@ -15,13 +15,17 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
     .maybeSingle();
   if (!opportunity) notFound();
 
-  const [{ data: owner }, { data: direction }, { data: feedback }] = await Promise.all([
+  const [{ data: owner }, { data: direction }, { data: ownProfile }, { data: feedback }] = await Promise.all([
     supabase.from("profiles").select("id,display_name,handle,discoverable").eq("id", opportunity.created_by).maybeSingle(),
     supabase.from("direction_profiles").select("future_tags,skill_tags,preferred_domains").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("primary_domains").eq("id", userId).maybeSingle(),
     supabase.from("recommendation_feedback").select("state").eq("user_id", userId)
       .eq("target_type", "opportunity").eq("target_id", id).maybeSingle(),
   ]);
-  const reasons = opportunityReasons(direction, opportunity);
+  const signals = { ...direction, preferred_domains: [...new Set([
+    ...(direction?.preferred_domains ?? []), ...(ownProfile?.primary_domains ?? []),
+  ])] };
+  const reasons = opportunityReasons(signals, opportunity);
   const isOwner = opportunity.created_by === userId;
   const canContact = !isOwner && owner?.discoverable === true;
 
