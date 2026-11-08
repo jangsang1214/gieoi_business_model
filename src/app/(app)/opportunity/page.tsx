@@ -90,6 +90,7 @@ export default async function OpportunityPage({ searchParams }: {
           <Link key={value} className={`pill ${view === value ? "active" : ""}`}
             href={opportunityHref({ q, domain, kind, view: value })}>{label}</Link>
         )}
+        <Link className="pill" href="/opportunity/applications">내 지원 현황</Link>
       </nav>
 
       <form className="opportunity-filters" action="/opportunity" method="get">
