@@ -54,7 +54,7 @@ export default async function OpportunityPage({ searchParams }: {
     supabase.from("recommendation_feedback").select("target_id,state").eq("user_id", userId).eq("target_type", "opportunity"),
   ]);
 
-  const signals = { ...mine, preferred_domains: [...new Set([
+  const signals = { ...(mine ?? {}), preferred_domains: [...new Set([
     ...(mine?.preferred_domains ?? []), ...(profile?.primary_domains ?? []),
   ])] };
   const states = new Map((feedback ?? []).map((item) => [item.target_id, item.state]));
