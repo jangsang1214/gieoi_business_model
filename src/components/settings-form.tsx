@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/sign-out-button";
+import { AvatarUploader } from "@/components/avatar-uploader";
 
 const domains = [
   ["business", "BUSINESS"],
@@ -26,6 +27,7 @@ const openToOptions = [
 
 type Profile = {
   id: string;
+  avatar_url: string | null;
   display_name: string | null;
   handle: string | null;
   headline: string | null;
@@ -47,7 +49,6 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
   const [discoverable, setDiscoverable] = useState(profile.discoverable ?? true);
   const [affiliationVisible, setAffiliationVisible] = useState(profile.affiliation_visible ?? true);
 
-  const initials = useMemo(() => (profile.display_name || email || "G").slice(0, 1).toUpperCase(), [profile.display_name, email]);
 
   function toggle(list: string[], value: string, setter: (next: string[]) => void) {
     setter(list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
@@ -89,7 +90,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
   return (
     <form onSubmit={save} className="settings-stack">
       <section className="settings-card identity-card">
-        <div className="settings-avatar">{initials}</div>
+        <AvatarUploader userId={profile.id} name={profile.display_name||email} initialPath={profile.avatar_url}/>
         <div className="grow">
           <div className="eyebrow">PROFILE</div>
           <h2>{profile.display_name || "이름을 남겨주세요"}</h2>

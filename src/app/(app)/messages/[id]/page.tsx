@@ -3,20 +3,22 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { MessageForm } from "@/components/message-form";
 import { ReportButton } from "@/components/report-button";
+import { MessageThreadRealtime } from "@/components/message-thread-realtime";
 
 export default async function Thread({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase, userId } = await requireUser();
   const { data: conv } = await supabase.from("conversations").select("id,kind,title,participant_ids,team_id,teams(id,name)").eq("id", id).maybeSingle();
   if (!conv) notFound();
-  const { data: messages } = await supabase.from("messages").select("id,body,sender_id,created_at,message_type,payload").eq("conversation_id", id).order("created_at");
+  const { data: messages } = await supabase.from("messages").select("id,body,sender_id,created_at,message_type,payload").eq("conversation_id", id).order("created_at",{ascending:false}).limit(100);
 
   return <>
+    <MessageThreadRealtime conversationId={id}/>
     <header className="utility-head thread-head">
       <div><Link href="/messages" className="meta">← 메시지</Link><h1>{(conv as any).teams?.name || conv.title || "Direct Message"}</h1></div>
       {(conv as any).team_id && <Link href={`/team/${(conv as any).team_id}`} className="btn secondary">TEAM 보기</Link>}
     </header>
-    <div className="message-list">{messages?.map((m: any) => {
+    <div className="message-list">{messages?.slice().reverse().map((m: any) => {
       const proposalTeamId = m.message_type === "team_proposal" ? m.payload?.team_id : null;
       const proposalTeamName = m.message_type === "team_proposal" ? m.payload?.team_name : null;
       return <div className={m.sender_id === userId ? "msg me" : "msg"} key={m.id}>

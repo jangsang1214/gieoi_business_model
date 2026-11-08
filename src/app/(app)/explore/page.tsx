@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { RecordMedia } from "@/components/record-media";
 import { DiscoveryTracker } from "@/components/activity-tracker";
 import { ExploreEmpty } from "@/components/explore-empty";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 const domains = ["business","workout","create","study","career","lifestyle"] as const;
 const kinds = ["record","proof","goal","team","person"] as const;
@@ -11,7 +12,7 @@ type FilterParams = { q?: string; domain?: string; kind?: string; sort?: string;
 type DiscoveryItem = {
   id:string; kind:Kind; domain:string; date:string;
   title?:string|null; body?:string|null; media?:unknown;
-  href:string; authorId?:string|null; authorName?:string|null; authorHandle?:string|null; meta?:string|null;
+  href:string; authorId?:string|null; authorName?:string|null; authorHandle?:string|null; authorAvatar?:string|null; meta?:string|null;
 };
 const sizes = { record:24, proof:12, goal:12, team:8, person:12 } as const;
 const humanDomains: Record<string,string> = {
@@ -52,7 +53,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
   const recordLimit=sizes.record, proofLimit=sizes.proof, goalLimit=sizes.goal, teamLimit=sizes.team, personLimit=sizes.person;
 
   let recordsQuery=supabase.from("records")
-    .select("id,body,media,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle)")
+    .select("id,body,media,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle,avatar_url)")
     .eq("visibility","public").neq("author_id",userId).neq("type","proof")
     .order("occurred_at",{ascending:false}).range((page-1)*recordLimit,page*recordLimit);
   let proofsQuery=supabase.from("proofs")
@@ -68,7 +69,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
     .eq("discoverable",true).is("archived_at",null).neq("owner_id",userId)
     .order("created_at",{ascending:false}).range((page-1)*teamLimit,page*teamLimit);
   let peopleQuery=supabase.from("profiles")
-    .select("id,display_name,handle,headline,bio,primary_domains,open_to,created_at")
+    .select("id,display_name,handle,headline,bio,avatar_url,primary_domains,open_to,created_at")
     .eq("discoverable",true).neq("id",userId)
     .order("created_at",{ascending:false}).range((page-1)*personLimit,page*personLimit);
 
@@ -110,7 +111,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
 
   const ownerIds=[...new Set([...proofs.map((p:any)=>p.owner_id),...goals.map((g:any)=>g.owner_id)].filter(Boolean))];
   const {data:owners}=ownerIds.length
-    ? await supabase.from("profiles").select("id,display_name,handle").in("id",ownerIds)
+    ? await supabase.from("profiles").select("id,display_name,handle,avatar_url").in("id",ownerIds)
     : {data:[] as any[]};
   const ownerMap=new Map((owners||[]).map((owner:any)=>[owner.id,owner]));
   const followed=new Set((followingResult.data||[]).map((f:any)=>f.following_id));
@@ -121,19 +122,19 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
       id:r.id,kind:"record" as const,domain:r.domain,date:r.occurred_at,body:r.body,media:r.media,
       href:`/record/${r.id}`,authorId:r.author_id,
       authorName:r.profiles?.display_name||r.profiles?.handle||"프로프 사용자",
-      authorHandle:r.profiles?.handle||null,meta:"기록",
+      authorHandle:r.profiles?.handle||null,authorAvatar:r.profiles?.avatar_url||null,meta:"기록",
     })),
     ...proofs.map((p:any)=>{
       const owner=ownerMap.get(p.owner_id) as any;
       return {id:p.id,kind:"proof" as const,domain:p.domain,date:p.happened_at,title:p.title,body:p.description,
         href:`/proof/${p.id}`,authorId:p.owner_id,authorName:owner?.display_name||owner?.handle||"프로프 사용자",
-        authorHandle:owner?.handle||null,meta:"Proof"};
+        authorHandle:owner?.handle||null,authorAvatar:owner?.avatar_url||null,meta:"Proof"};
     }),
     ...goals.map((g:any)=>{
       const owner=ownerMap.get(g.owner_id) as any;
       return {id:g.id,kind:"goal" as const,domain:g.domain,date:g.created_at,title:g.title,body:g.why,
         href:`/goal/${g.id}`,authorId:g.owner_id,authorName:owner?.display_name||owner?.handle||"프로프 사용자",
-        authorHandle:owner?.handle||null,meta:g.current_stage||"Goal"};
+        authorHandle:owner?.handle||null,authorAvatar:owner?.avatar_url||null,meta:g.current_stage||"Goal"};
     }),
     ...teams.map((t:any)=>{
       const roles=(t.team_roles||[]).filter((r:any)=>r.is_open).map((r:any)=>r.title).slice(0,2);
@@ -144,7 +145,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
       id:p.id,kind:"person" as const,domain:p.primary_domains?.[0]||"people",date:p.created_at,
       title:p.display_name||p.handle||"프로프 사용자",body:p.headline||p.bio||"지금 하고 있는 일을 확인해 보세요.",
       href:`/profile/${p.id}`,authorId:p.id,authorName:p.display_name||p.handle||"프로프 사용자",
-      authorHandle:p.handle||null,meta:"사람",
+      authorHandle:p.handle||null,authorAvatar:p.avatar_url||null,meta:"사람",
     })),
   ];
 
@@ -216,7 +217,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
             </div>
           </Link>
           <div className="tile-bottom">
-            {item.kind==="person" ? <span className="tile-author"><i>{String(item.authorName||"?").slice(0,1)}</i>
+            {item.kind==="person" ? <span className="tile-author"><ProfileAvatar userId={item.authorAvatar?item.authorId:null} name={item.authorName} version={item.authorAvatar}/>
               <span><b>{item.authorName}</b><small>@{item.authorHandle||"user"}</small></span></span>
               : item.authorId ? <Link className="tile-author" href={`/profile/${item.authorId}`} aria-label={`${item.authorName||"작성자"} 프로필`}>
                 <i>{String(item.authorName||"?").slice(0,1)}</i>

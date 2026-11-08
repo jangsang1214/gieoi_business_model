@@ -9,13 +9,14 @@ import { FollowButton } from "@/components/follow-button";
 import { BlockUserButton } from "@/components/block-user-button";
 import { ReportButton } from "@/components/report-button";
 import { ProfileTabs } from "@/components/profile-tabs";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export default async function PublicProfile({params}:{params:Promise<{id:string}>}) {
   const {id}=await params;
   const {supabase,userId}=await requireUser();
   if(id===userId) redirect("/profile");
   const [{data:profile},{data:goals},{data:proofs},{data:records},{data:memberships},{data:myMemberships},{data:existingFollow}]=await Promise.all([
-    supabase.from("profiles").select("id,display_name,handle,headline,bio,primary_domains,open_to,discoverable,affiliation_name,affiliation_role,affiliation_visible").eq("id",id).maybeSingle(),
+    supabase.from("profiles").select("id,display_name,handle,headline,bio,avatar_url,primary_domains,open_to,discoverable,affiliation_name,affiliation_role,affiliation_visible").eq("id",id).maybeSingle(),
     supabase.from("goals").select("id,title,why,domain,target_date,status").eq("owner_id",id).eq("visibility","public").order("created_at",{ascending:false}).limit(12),
     supabase.from("proofs").select("id,title,description,domain,happened_at").eq("owner_id",id).eq("visibility","public").order("happened_at",{ascending:false}).limit(20),
     supabase.from("records").select("id,body,media,type,domain,occurred_at").eq("author_id",id).eq("visibility","public").order("occurred_at",{ascending:false}).limit(30),
@@ -60,7 +61,7 @@ export default async function PublicProfile({params}:{params:Promise<{id:string}
     <ActivityViewTracker userId={userId} type="profile_view" id={id}/>
     <header className="profile-v2-head">
       <div className="profile-v2-main">
-        <div className="profile-avatar-xl">{String(profile.display_name||"?").slice(0,1)}</div>
+        <ProfileAvatar userId={profile.avatar_url ? id : null} name={profile.display_name} size="xl" version={profile.avatar_url}/>
         <div className="profile-identity">
           <div className="profile-name-line"><h1>{profile.display_name}</h1></div>
           <div className="profile-handle">@{profile.handle||"user"}</div>

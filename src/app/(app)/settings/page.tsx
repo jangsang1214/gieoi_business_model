@@ -6,7 +6,7 @@ import { UnblockUserButton } from "@/components/block-user-button";
 export default async function SettingsPage() {
   const { supabase, userId } = await requireUser();
   const [{ data: profile }, { data: authData }, { data: blocked }] = await Promise.all([
-    supabase.from("profiles").select("id,display_name,handle,headline,bio,primary_domains,open_to,discoverable,affiliation_name,affiliation_role,affiliation_visible").eq("id", userId).single(),
+    supabase.from("profiles").select("id,display_name,handle,headline,bio,avatar_url,primary_domains,open_to,discoverable,affiliation_name,affiliation_role,affiliation_visible").eq("id", userId).single(),
     supabase.auth.getUser(),
     supabase.from("blocks").select("blocked_id").eq("blocker_id",userId),
   ]);

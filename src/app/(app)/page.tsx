@@ -3,13 +3,15 @@ import { requireUser } from "@/lib/auth";
 import { FeedPrompt } from "@/components/feed-prompt";
 import { RecordMedia } from "@/components/record-media";
 import { GettingStarted } from "@/components/getting-started";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 const domains = ["business", "workout", "create", "study", "career", "lifestyle"] as const;
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ domain?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ domain?: string; feed?: string }> }) {
   const { supabase, userId } = await requireUser();
   const params = await searchParams;
   const selectedDomain = domains.includes(params.domain as (typeof domains)[number]) ? params.domain : null;
+  const followingOnly = params.feed === "following";
 
   const [{ data: me }, { data: myGoals }, { data: memberships }, { count: myRecordCount }, { data: following }] = await Promise.all([
     supabase.from("profiles").select("primary_domains").eq("id", userId).single(),
@@ -19,18 +21,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
     supabase.from("follows").select("following_id").eq("follower_id",userId),
   ]);
 
+  const followed = new Set<string>((following || []).map((f: any) => f.following_id));
   let recordsQuery = supabase
     .from("records")
-    .select("id,body,media,visibility,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle),goals(id,title,domain),teams(id,name)")
+    .select("id,body,media,visibility,domain,type,occurred_at,author_id,profiles!records_author_id_fkey(display_name,handle,avatar_url),goals(id,title,domain),teams(id,name)")
     .order("occurred_at", { ascending: false })
     .limit(selectedDomain ? 30 : 60);
   if (selectedDomain) recordsQuery = recordsQuery.eq("domain", selectedDomain);
-  const { data: records } = await recordsQuery;
+  if (followingOnly && followed.size) recordsQuery = recordsQuery.in("author_id",[...followed]);
+  const { data: records } = followingOnly && !followed.size ? {data: []} : await recordsQuery;
 
   const preferred = new Set<string>([...(me?.primary_domains || []), ...(myGoals || []).map((g: any) => g.domain)]);
   const myTeams = new Set<string>((memberships || []).map((m: any) => m.team_id));
-  const followed = new Set<string>((following || []).map((f: any) => f.following_id));
-  const ranked = selectedDomain ? (records || []) : [...(records || [])].sort((a: any, b: any) => {
+  const ranked = selectedDomain || followingOnly ? (records || []) : [...(records || [])].sort((a: any, b: any) => {
     const score = (r: any) => {
       const ageHours = Math.max(0, (Date.now() - new Date(r.occurred_at).getTime()) / 36e5);
       const recency = Math.max(0, 42 - ageHours / 5);
@@ -56,21 +59,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
       <GettingStarted hasDomain={Boolean(me?.primary_domains?.length)} hasGoal={Boolean(myGoals?.length)} hasRecord={Boolean(myRecordCount)} />
 
       <div className="tabs feed-tabs">
-        <Link href="/" className={`pill ${!selectedDomain ? "active" : ""}`}>For You</Link>
+        <Link href="/" className={`pill ${!followingOnly && !selectedDomain ? "active" : ""}`}>추천</Link>
+        <Link href="/?feed=following" className={`pill ${followingOnly ? "active" : ""}`}>팔로잉</Link>
         {domains.map((domain) => <Link key={domain} href={`/?domain=${domain}`} className={`pill ${selectedDomain === domain ? "active" : ""}`}>{domain.toUpperCase()}</Link>)}
       </div>
 
       {!feed.length ? (
         <div className="empty feed-empty">
-          <h3>아직 피드가 조용합니다.</h3>
-          <p>첫 기록을 남기거나 사람과 TEAM을 발견해보세요.</p>
+          <h3>{followingOnly ? "팔로잉 피드가 조용해요." : "아직 피드가 조용합니다."}</h3>
+          <p>{followingOnly ? "관심 있는 사람을 팔로우하면 기록을 이곳에서 볼 수 있어요." : "첫 기록을 남기거나 사람과 TEAM을 발견해보세요."}</p>
           <Link href="/explore" className="inline-action">탐색 →</Link>
         </div>
       ) : feed.map((r: any) => {
         const profileHref = r.author_id === userId ? "/profile" : `/profile/${r.author_id}`;
         return <article className="post social-post" key={r.id}>
           <div className="post-head">
-            <Link href={profileHref} className="avatar-link"><div className="avatar">{String(r.profiles?.display_name || "?").slice(0, 1)}</div></Link>
+            <Link href={profileHref} className="avatar-link"><ProfileAvatar userId={r.profiles?.avatar_url ? r.author_id : null} name={r.profiles?.display_name} version={r.profiles?.avatar_url}/></Link>
             <div className="grow">
               <div className="post-user-line"><Link href={profileHref}><b>{r.profiles?.display_name || r.profiles?.handle || "프로프 사용자"}</b></Link>{r.profiles?.handle && <span>@{r.profiles.handle}</span>}</div>
               <div className="meta">{new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div>
