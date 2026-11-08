@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState,type ChangeEvent} from "react";
+import {useState,type ChangeEvent} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
 import {ProfileAvatar} from "@/components/profile-avatar";
