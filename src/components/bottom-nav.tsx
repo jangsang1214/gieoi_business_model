@@ -17,6 +17,7 @@ const mobileItems = [
   ["/", "홈", "home"],
   ["/explore", "탐색", "search"],
   ["/team", "TEAM", "team"],
+  ["/opportunity", "기회", "opportunity"],
   ["/messages", "메시지", "message"],
   ["/profile", "내 삶", "profile"],
 ] as const;
