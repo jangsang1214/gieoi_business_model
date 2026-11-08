@@ -181,6 +181,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
           ["","모두"],["record","기록"],["person","사람"],["team","TEAM"],["goal","Goal"],["proof","Proof"],
         ].map(([value,label])=><Link key={value} className={kind===value?"active":""}
           href={exploreHref({...filter,kind:value,page:"1"})}>{label}</Link>)}
+        <Link href="/opportunity">기회</Link>
       </nav>
       <div className="explore-secondary-filter-v16">
         <nav className="explore-domain-tabs" aria-label="관심 분야">
