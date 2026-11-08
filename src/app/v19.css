@@ -1,0 +1,24 @@
+/* prof. v19 — social essentials, preserve existing palette */
+.prof-avatar{display:inline-flex;width:42px;height:42px;border-radius:50%;overflow:hidden;flex:none;position:relative;background:var(--pg-soft);border:1px solid var(--pg-line-strong);align-items:center;justify-content:center;color:var(--pg-text);vertical-align:middle}
+.prof-avatar-initial{font-weight:600;font-size:14px}
+.prof-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.prof-avatar-large{width:54px;height:54px}
+.prof-avatar-large .prof-avatar-initial{font-size:18px}
+.prof-avatar-xl{width:98px;height:98px}
+.prof-avatar-xl .prof-avatar-initial{font-size:30px}
+.profile-v2-main>.prof-avatar-xl{flex-shrink:0}
+.avatar-uploader-v19{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.avatar-uploader-controls-v19{display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:240px}
+.avatar-uploader-controls-v19 input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.avatar-uploader-controls-v19 .btn{cursor:pointer}
+.avatar-uploader-controls-v19 small{flex-basis:100%;font-size:10px;color:var(--pg-muted)}
+.avatar-uploader-controls-v19 .error{flex-basis:100%}
+.prof-inbox-row-v19{display:flex;align-items:center;gap:12px}
+.prof-inbox-row-v19.unread b{color:var(--pg-text);font-weight:750}
+.prof-inbox-row-v19 .grow{min-width:0}
+.prof-inbox-row-v19 .grow p{white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.prof-inbox-end-v19{display:flex;align-items:flex-end;flex-direction:column;gap:7px;flex:none}
+.prof-inbox-end-v19 time{font-size:9px;color:var(--pg-muted)}
+.inbox-unread-v19{font-size:10px;min-width:19px;height:19px;padding:0 5px;background:var(--pg-white);color:var(--pg-black);display:inline-flex;align-items:center;justify-content:center;border-radius:99px;font-weight:700}
+.inbox-count-v19{font-size:11px;color:var(--pg-muted)}
+@media(max-width:520px){.prof-avatar-xl{width:76px;height:76px}.prof-avatar-xl .prof-avatar-initial{font-size:26px}.avatar-uploader-v19{gap:11px}}
