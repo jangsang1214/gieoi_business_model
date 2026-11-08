@@ -44,18 +44,23 @@ export default async function OpportunityPage({ searchParams }: {
     { data: opportunities, error: opportunityError },
     { data: rising },
     { data: mine },
+    { data: profile },
     { data: feedback },
   ] = await Promise.all([
     query,
     supabase.from("public_team_momentum").select("team_id,name,domain,proof_count_30d,continuity_months,momentum_score").order("momentum_score", { ascending: false }).limit(6),
     supabase.from("direction_profiles").select("future_tags,skill_tags,preferred_domains,stage,verified_evidence_count,team_continuity_months,active_weeks_12").eq("user_id", userId).maybeSingle(),
+    supabase.from("profiles").select("primary_domains").eq("id", userId).maybeSingle(),
     supabase.from("recommendation_feedback").select("target_id,state").eq("user_id", userId).eq("target_type", "opportunity"),
   ]);
 
+  const signals = { ...mine, preferred_domains: [...new Set([
+    ...(mine?.preferred_domains ?? []), ...(profile?.primary_domains ?? []),
+  ])] };
   const states = new Map((feedback ?? []).map((item) => [item.target_id, item.state]));
   const entries = (opportunities ?? []).map((item) => {
-    const reasons = opportunityReasons(mine, item);
-    const score = reasons.length ? (opportunityMatch(mine, item)?.total ?? 0) : 0;
+    const reasons = opportunityReasons(signals, item);
+    const score = reasons.length ? (opportunityMatch(signals, item)?.total ?? 0) : 0;
     return { item, reasons, score };
   }).filter(({ item, reasons }) => {
     if (states.get(item.id) === "dismissed") return false;
