@@ -44,6 +44,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [domainsValue, setDomainsValue] = useState<string[]>(profile.primary_domains ?? []);
   const [openTo, setOpenTo] = useState<string[]>(profile.open_to ?? []);
   const [discoverable, setDiscoverable] = useState(profile.discoverable ?? true);
@@ -56,16 +57,22 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
 
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSaving(true);
     setMessage("");
+    setSaveSuccess(false);
     const form = new FormData(e.currentTarget);
+    const displayName = String(form.get("display_name") ?? "").trim();
+    if (!displayName) {
+      setMessage("이름을 입력해 주세요.");
+      return;
+    }
+    setSaving(true);
     const supabase = createClient();
     const handle = String(form.get("handle") || "").trim().replace(/^@/, "").toLowerCase();
 
     const { error } = await supabase
       .from("profiles")
       .update({
-        display_name: String(form.get("display_name") || "").trim() || null,
+        display_name: displayName,
         handle: handle || null,
         headline: String(form.get("headline") || "").trim() || null,
         bio: String(form.get("bio") || "").trim() || null,
@@ -82,6 +89,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
     if (error) setMessage(error.message);
     else {
       setMessage("변경사항을 저장했습니다.");
+      setSaveSuccess(true);
       router.refresh();
     }
     setSaving(false);
@@ -100,7 +108,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
 
       <section className="settings-card">
         <div className="settings-heading"><div><span>01</span><h3>프로필</h3></div></div>
-        <label className="field"><span>이름</span><input name="display_name" defaultValue={profile.display_name ?? ""} placeholder="당신의 이름" /></label>
+        <label className="field"><span>이름</span><input name="display_name" defaultValue={profile.display_name ?? ""} placeholder="당신의 이름" required maxLength={60} autoComplete="nickname" /></label>
         <label className="field"><span>아이디</span><div className="input-prefix"><b>@</b><input name="handle" defaultValue={profile.handle ?? ""} placeholder="yourname" /></div></label>
         <label className="field"><span>한 줄 소개</span><input name="headline" defaultValue={profile.headline ?? ""} placeholder="지금 무엇을 하고 있나요?" maxLength={90} /></label>
         <label className="field"><span>소개</span><textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} placeholder="필요한 만큼만 적어주세요." maxLength={280} /></label>
@@ -138,7 +146,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
         <button type="button" aria-label="발견 허용" className={discoverable ? "switch on" : "switch"} onClick={() => setDiscoverable((v) => !v)}><span /></button>
       </section>
 
-      {message && <div className={message.includes("저장") ? "success notice" : "error notice"}>{message}</div>}
+      {message && <div role={saveSuccess ? "status" : "alert"} className={saveSuccess ? "success notice" : "error notice"}>{message}</div>}
       <button className="btn primary full settings-save" disabled={saving}>{saving ? "저장 중..." : "변경사항 저장"}</button>
 
       <section className="settings-card account-card">
