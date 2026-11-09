@@ -16,7 +16,7 @@ const openLabel=(x:string)=>({team:"TEAM",job:"Job",collaboration:"Collaboration
 
 export default async function Profile() {
   const {supabase,userId}=await requireUser();
-  const [{data:p},{data:goals},{data:proofs},{data:dir},{data:collab},{data:records},{data:memberships}]=await Promise.all([
+  const [{data:p},{data:goals},{data:proofs},{data:dir},{data:collab},{data:records},{data:memberships},{data:outcomes}]=await Promise.all([
     supabase.from("profiles").select("*").eq("id",userId).single(),
     supabase.from("goals").select("*").eq("owner_id",userId).order("created_at",{ascending:false}),
     supabase.from("proofs").select("*,proof_provenance(*)").eq("owner_id",userId).order("happened_at",{ascending:false}),
@@ -24,6 +24,8 @@ export default async function Profile() {
     supabase.from("collaboration_proofs").select("*,teams(name)").eq("contributor_id",userId).order("created_at",{ascending:false}),
     supabase.from("records").select("id,body,media,domain,type,occurred_at").eq("author_id",userId).order("occurred_at",{ascending:false}).limit(30),
     supabase.from("team_members").select("team_id,role_name,status,joined_at,teams(name,domain,mission)").eq("user_id",userId).eq("status","active"),
+    supabase.from("opportunity_outcomes").select("id,title,summary,proof_id,created_at,status")
+      .eq("submitted_by",userId).eq("status","confirmed").order("created_at",{ascending:false}).limit(20),
   ]);
   if(!p) return <div className="empty"><h3>프로필을 불러오지 못했습니다.</h3></div>;
   const displayName=p.display_name||"당신의 삶";
@@ -56,6 +58,16 @@ export default async function Profile() {
         <div><span className="mini-label">{String(x.domain).toUpperCase()} · {new Date(x.happened_at).toLocaleDateString("ko-KR")}</span><h3>{x.title}</h3><p>{x.description}</p></div>
         <span className="proof-level">{level(x.proof_provenance)}</span>
       </Link>)}</div> : <div className="compact-empty">해낸 결과가 생기면 Proof로 남겨보세요.</div>}
+      {outcomes?.length ? <div className="profile-opportunity-outcomes">
+        <div className="section-title-row"><div><span>COLLABORATION</span><h2>함께 만든 결과 · 상호 확인</h2></div></div>
+        <p className="meta">아래 결과는 상대방이 협업 사실을 확인한 기록입니다. 기관 검증이나 자격 인증과는 다릅니다.</p>
+        <div className="discovery-stack">{outcomes.map((outcome)=><article className="evidence-row" key={outcome.id}>
+          <div><span className="mini-label">MUTUALLY CONFIRMED</span>
+            <h3>{outcome.title}</h3><p>{outcome.summary}</p>
+            {outcome.proof_id && <Link href={`/proof/${outcome.proof_id}`} className="inline-action">연결된 내 Proof →</Link>}
+          </div>
+        </article>)}</div>
+      </div> : null}
     </section>},
     {id:"team",label:"TEAM",content:<section className="discover-section profile-section">
       <div className="section-title-row"><div><span>TEAM</span><h2>함께하고 있는 것</h2></div></div>

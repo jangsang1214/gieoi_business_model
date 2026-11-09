@@ -1,3 +1,105 @@
 "use client";
-import { useState } from "react";import { useRouter } from "next/navigation";import { createClient } from "@/lib/supabase/client";
-export function OpportunityCreator({userId}:{userId:string}){const [open,setOpen]=useState(false);const router=useRouter();async function submit(fd:FormData){const supabase=createClient();await supabase.from('opportunities').insert({created_by:userId,organization_name:String(fd.get('org')),kind:String(fd.get('kind')),domain:String(fd.get('domain')),title:String(fd.get('title')),description:String(fd.get('description')),status:'open'});setOpen(false);router.refresh()}return <>{<button className="btn primary" onClick={()=>setOpen(true)}>기회 등록</button>}{open&&<div className="overlay"><form className="sheet" action={submit}><div className="grab"/><h2>Opportunity 만들기</h2><label className="field">조직 / TEAM<input name="org" required/></label><label className="field">기회 제목<input name="title" required/></label><label className="field">종류<select name="kind"><option value="job">JOB</option><option value="team">TEAM</option><option value="collaboration">COLLABORATION</option><option value="project">PROJECT</option><option value="audition">AUDITION</option><option value="research">RESEARCH</option></select></label><label className="field">분야<select name="domain"><option value="business">BUSINESS</option><option value="create">CREATE</option><option value="career">CAREER</option><option value="study">STUDY</option><option value="workout">WORKOUT</option></select></label><label className="field">설명<textarea name="description" rows={4}/></label><div className="row"><button type="button" className="btn secondary full" onClick={()=>setOpen(false)}>취소</button><button className="btn primary full">게시</button></div></form></div>}</>}
+
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { opportunityKinds, opportunityDomains } from "@/lib/opportunity";
+
+function parseTags(input: string): string[] {
+  return [...new Set(input.split(",").map((value) => value.trim()).filter(Boolean))].slice(0, 8);
+}
+
+export function OpportunityCreator({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    const fd = new FormData(event.currentTarget);
+    const organization = String(fd.get("org") ?? "").trim();
+    const title = String(fd.get("title") ?? "").trim();
+    const description = String(fd.get("description") ?? "").trim();
+    const kind = String(fd.get("kind") ?? "");
+    const domain = String(fd.get("domain") ?? "");
+
+    if (!organization || !title || !description
+      || !opportunityKinds.some((entry) => entry.value === kind)
+      || !opportunityDomains.some((entry) => entry.value === domain)) {
+      setError("필수 내용을 확인해 주세요.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const supabase = createClient();
+    const { error: insertError } = await supabase.from("opportunities").insert({
+      created_by: userId,
+      organization_name: organization.slice(0, 100),
+      title: title.slice(0, 120),
+      description: description.slice(0, 3000),
+      kind,
+      domain,
+      status: "open",
+      required_skills: parseTags(String(fd.get("skills") ?? "")),
+      desired_future_tags: parseTags(String(fd.get("direction") ?? "")),
+    });
+    setBusy(false);
+    if (insertError) {
+      setError("기회를 등록하지 못했어요. 내용을 확인하고 다시 시도해 주세요.");
+      return;
+    }
+    setOpen(false);
+    router.refresh();
+  }
+
+  return <>
+    <button type="button" className="btn primary" onClick={() => {
+      setError("");
+      setOpen(true);
+    }}>기회 등록</button>
+    {open && <div className="overlay" onMouseDown={(event) => {
+      if (event.target === event.currentTarget && !busy) setOpen(false);
+    }}>
+      <form className="sheet" onSubmit={submit}>
+        <div className="grab" />
+        <h2>새 기회 등록</h2>
+        <p className="meta">함께할 사람을 찾거나 프로젝트, 채용, 공모전 등 새로운 기회를 공유하세요.</p>
+        <label className="field"><span>게시자 / 조직 / TEAM</span>
+          <input name="org" required maxLength={100} placeholder="예: 디자인 스터디, OO 동아리" disabled={busy}/>
+        </label>
+        <label className="field"><span>기회 제목</span>
+          <input name="title" required maxLength={120} placeholder="어떤 사람을 찾고 있나요?" disabled={busy}/>
+        </label>
+        <label className="field"><span>종류</span>
+          <select name="kind" defaultValue="project" disabled={busy}>
+            {opportunityKinds.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+        <label className="field"><span>분야</span>
+          <select name="domain" defaultValue="business" disabled={busy}>
+            {opportunityDomains.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}
+          </select>
+        </label>
+        <label className="field"><span>자세한 설명</span>
+          <textarea name="description" required maxLength={3000} rows={5}
+            placeholder="목표, 필요한 역할, 활동 방식, 기간, 연락 방법 등을 알려 주세요."
+            disabled={busy}/>
+        </label>
+        <label className="field"><span>필요 역량 <small>(선택 · 쉼표로 구분)</small></span>
+          <input name="skills" maxLength={250} placeholder="예: 개발, 디자인, 영상 편집" disabled={busy}/>
+        </label>
+        <label className="field"><span>관련 방향 <small>(선택 · 쉼표로 구분)</small></span>
+          <input name="direction" maxLength={250} placeholder="예: AI 제품 출시, 대회 출전" disabled={busy}/>
+        </label>
+        <p className="meta">조직명 입력은 기관 인증을 의미하지 않습니다. 허위 모집이나 민감정보 요구는 금지됩니다.</p>
+        {error && <div className="error notice" role="alert">{error}</div>}
+        <div className="row">
+          <button type="button" className="btn secondary full" disabled={busy} onClick={() => setOpen(false)}>취소</button>
+          <button type="submit" className="btn primary full" disabled={busy}>{busy ? "게시 중..." : "기회 게시"}</button>
+        </div>
+      </form>
+    </div>}
+  </>;
+}

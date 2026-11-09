@@ -18,28 +18,39 @@ export function RecommendationActions({
 }) {
   const [state, setState] = useState(initialState ?? null);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   async function setFeedback(next: "saved" | "dismissed" | null) {
     if (busy) return;
     setBusy(true);
+    setError("");
     const supabase = createClient();
+    let feedbackError;
 
     if (next === null) {
-      await supabase
+      const { error } = await supabase
         .from("recommendation_feedback")
         .delete()
         .eq("user_id", userId)
         .eq("target_type", targetType)
         .eq("target_id", targetId);
+      feedbackError = error;
     } else {
-      await supabase.from("recommendation_feedback").upsert({
+      const { error } = await supabase.from("recommendation_feedback").upsert({
         user_id: userId,
         target_type: targetType,
         target_id: targetId,
         state: next,
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id,target_type,target_id" });
+      feedbackError = error;
+    }
+
+    if (feedbackError) {
+      setError("저장 상태를 변경하지 못했어요. 다시 시도해 주세요.");
+      setBusy(false);
+      return;
     }
 
     if (next === "saved" && (targetType === "team" || targetType === "profile")) {
@@ -47,7 +58,8 @@ export function RecommendationActions({
     }
     setState(next);
     setBusy(false);
-    if (next === "dismissed") router.refresh();
+    // Saved/matched views are server-filtered; refresh after save, unsave or dismiss.
+    router.refresh();
   }
 
   return (
@@ -56,6 +68,7 @@ export function RecommendationActions({
         {state === "saved" ? "저장됨" : "저장"}
       </button>
       <button type="button" disabled={busy} onClick={() => setFeedback("dismissed")}>관심 없음</button>
+      {error && <span className="error" role="alert">{error}</span>}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { NotificationOpenLink } from "@/components/notification-open-link";
 
 const kinds: Record<string, string> = {
-  dm: "메시지", team_proposal: "TEAM 제안", team_application: "TEAM 지원", team_join: "TEAM 합류", team_rejected: "지원 결과", comment: "댓글", follow: "팔로우",
+  dm: "메시지", team_proposal: "TEAM 제안", team_application: "TEAM 지원", team_join: "TEAM 합류", team_rejected: "지원 결과", comment: "댓글", follow: "팔로우", opportunity_application: "기회 지원", opportunity_decision: "기회 지원 결과", opportunity_withdrawn: "지원 철회", opportunity_outcome: "협업 결과",
 };
 
 export default async function Notifications() {
