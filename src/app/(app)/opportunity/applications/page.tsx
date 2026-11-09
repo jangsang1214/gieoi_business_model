@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { OpportunityOutcomeForm } from "@/components/opportunity-outcome-form";
+import { StartDmButton } from "@/components/start-dm-button";
 
 const labels: Record<string, string> = {
   pending: "검토 대기",
@@ -12,10 +14,31 @@ export default async function MyOpportunityApplications() {
   const { supabase, userId } = await requireUser();
   const { data: applications, error } = await supabase
     .from("opportunity_applications")
-    .select("id,opportunity_id,status,created_at,opportunities(id,title,organization_name,status)")
+    .select("id,opportunity_id,status,created_at,opportunities(id,title,organization_name,status,created_by)")
     .eq("applicant_id", userId)
     .order("created_at", { ascending: false })
     .limit(100);
+
+  const accepted = (applications ?? []).filter((item) => item.status === "accepted");
+  const applicationIds = accepted.map((item) => item.id);
+  const ownerIds = [...new Set((applications ?? []).flatMap((item) => {
+    const info = item.opportunities as unknown as { created_by?: string } | null;
+    return info?.created_by ? [info.created_by] : [];
+  }))];
+  const [{ data: outcomes }, { data: myProofs }, { data: owners }] = await Promise.all([
+    applicationIds.length
+      ? supabase.from("opportunity_outcomes")
+        .select("id,application_id,title,summary,status,proof_id")
+        .in("application_id", applicationIds)
+      : Promise.resolve({ data: [] as { id:string;application_id:string;title:string;summary:string;status:string;proof_id:string|null }[] }),
+    supabase.from("proofs").select("id,title").eq("owner_id",userId).eq("visibility","public")
+      .order("happened_at", { ascending:false }).limit(40),
+    ownerIds.length
+      ? supabase.from("profiles").select("id,discoverable").in("id",ownerIds)
+      : Promise.resolve({ data: [] as { id:string; discoverable:boolean }[] }),
+  ]);
+  const outcomesByApplication = new Map((outcomes ?? []).map(item=>[item.application_id,item]));
+  const ownerMap = new Map((owners ?? []).map(item=>[item.id,item]));
 
   return <>
     <header className="utility-head">
@@ -32,7 +55,7 @@ export default async function MyOpportunityApplications() {
     <section className="match-list" aria-label="내 지원 목록">
       {(applications ?? []).map((app) => {
         const opportunity = app.opportunities as unknown as {
-          id: string; title: string; organization_name: string; status: string;
+          id: string; title: string; organization_name: string; status: string; created_by: string;
         } | null;
         return <article className="match-card" key={app.id}>
           <div className="match-card-top"><div className="grow">
@@ -43,6 +66,12 @@ export default async function MyOpportunityApplications() {
             <span className="stage-pill">{labels[app.status] ?? app.status}</span>
           </div>
           {opportunity?.status === "open" && <Link href={`/opportunity/${app.opportunity_id}`} className="inline-action">기회 상세 →</Link>}
+          {app.status === "accepted" && <div className="opportunity-accepted-next">
+            <p className="meta">지원이 수락됐습니다. 상대방과 직접 대화해 다음 활동을 정하세요.</p>
+            {opportunity?.created_by && ownerMap.get(opportunity.created_by)?.discoverable && <StartDmButton me={userId} target={opportunity.created_by}/>}
+            <OpportunityOutcomeForm userId={userId} applicationId={app.id}
+              proofs={myProofs ?? []} outcome={outcomesByApplication.get(app.id) ?? null}/>
+          </div>}
         </article>;
       })}
     </section>
