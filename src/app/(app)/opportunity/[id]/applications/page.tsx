@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { OpportunityApplicationReview } from "@/components/opportunity-application-review";
+import { OpportunityOutcomeReview } from "@/components/opportunity-outcome-review";
+import { StartDmButton } from "@/components/start-dm-button";
 
 const statusLabel: Record<string, string> = {
   pending: "검토 대기",
@@ -28,8 +30,18 @@ export default async function OpportunityApplications({ params }: {
     .order("created_at", { ascending: false })
     .limit(150);
 
+  const applicationIds = (applications ?? []).filter(a=>a.status === "accepted").map(a=>a.id);
+  const { data: outcomes } = applicationIds.length
+    ? await supabase.from("opportunity_outcomes")
+      .select("id,application_id,title,summary,status,proof_id")
+      .in("application_id",applicationIds)
+    : { data: [] as {id:string;application_id:string;title:string;summary:string;status:string;proof_id:string|null}[] };
+  const outcomeMap = new Map((outcomes ?? []).map(item=>[item.application_id,item]));
   const applicantIds = [...new Set((applications ?? []).map((item) => item.applicant_id))];
-  const proofIds = [...new Set((applications ?? []).flatMap((item) => item.proof_id ? [item.proof_id] : []))];
+  const proofIds = [...new Set([
+    ...(applications ?? []).flatMap((item) => item.proof_id ? [item.proof_id] : []),
+    ...(outcomes ?? []).flatMap((item) => item.proof_id ? [item.proof_id] : []),
+  ])];
   const [{ data: profiles }, { data: proofs }] = await Promise.all([
     applicantIds.length
       ? supabase.from("profiles").select("id,display_name,handle,discoverable").in("id", applicantIds)
@@ -71,6 +83,22 @@ export default async function OpportunityApplications({ params }: {
               <Link href={`/proof/${proof.id}`} className="inline-action">첨부된 Proof · {proof.title} →</Link>}
           </div>
           {app.status === "pending" && <OpportunityApplicationReview applicationId={app.id}/>}
+          {app.status === "accepted" && <>
+            {person?.discoverable && <StartDmButton me={userId} target={app.applicant_id}/>}
+            {outcomeMap.has(app.id) && (() => {
+              const outcome = outcomeMap.get(app.id)!;
+              const outcomeProof = outcome.proof_id ? proofMap.get(outcome.proof_id) : null;
+              return <section className="opportunity-outcome-box" aria-label="협업 결과 확인">
+                <div className="mini-label">COLLABORATION OUTCOME</div>
+                <h3>{outcome.title}</h3><p>{outcome.summary}</p>
+                {outcomeProof && outcomeProof.owner_id === app.applicant_id &&
+                  <Link href={`/proof/${outcomeProof.id}`} className="inline-action">연결된 공개 Proof →</Link>}
+                <div className="meta">{outcome.status === "confirmed" ? "상호 확인됨"
+                  : outcome.status === "declined" ? "확인 거절됨" : "확인 요청 도착"}</div>
+                {outcome.status === "pending" && <OpportunityOutcomeReview outcomeId={outcome.id}/>}
+              </section>;
+            })()}
+          </>}
         </article>;
       })}
     </section>
