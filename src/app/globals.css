@@ -119,3 +119,14 @@ svg{display:block}.hidden{display:none!important}
 .profile-opportunity-outcomes{margin-top:22px}
 .profile-opportunity-outcomes>.meta{margin:0 0 12px}
 .profile-opportunity-outcomes .evidence-row{overflow-wrap:anywhere}
+
+
+/* Beta QA: review all applications without truncation */
+.opportunity-review-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 16px 28px;padding:14px 0;border-top:1px solid var(--line)}
+.opportunity-review-pagination .row{margin-left:auto;gap:8px}
+.opportunity-review-pagination .btn{min-width:70px;text-align:center}
+@media(max-width:380px){
+  .bottom-nav a{min-width:0;white-space:nowrap}
+  .opportunity-review-pagination{justify-content:center;text-align:center}
+  .opportunity-review-pagination .row{margin:0}
+}
