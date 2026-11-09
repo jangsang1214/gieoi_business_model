@@ -10,14 +10,21 @@ const labels: Record<string, string> = {
   withdrawn: "지원 철회",
 };
 
-export default async function MyOpportunityApplications() {
+export default async function MyOpportunityApplications({ searchParams }: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const { supabase, userId } = await requireUser();
-  const { data: applications, error } = await supabase
+  const requested = Number((await searchParams).page ?? "1");
+  const page = Number.isSafeInteger(requested) && requested >= 1 ? Math.min(requested, 10000) : 1;
+  const pageSize = 50;
+  const { data: applications, error, count } = await supabase
     .from("opportunity_applications")
-    .select("id,opportunity_id,status,created_at,opportunities(id,title,organization_name,status,created_by)")
+    .select("id,opportunity_id,status,created_at,opportunities(id,title,organization_name,status,created_by)", { count: "exact" })
     .eq("applicant_id", userId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .order("id", { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
 
   const accepted = (applications ?? []).filter((item) => item.status === "accepted");
   const applicationIds = accepted.map((item) => item.id);
@@ -47,10 +54,14 @@ export default async function MyOpportunityApplications() {
       </div>
     </header>
     {error && <p className="error notice" role="alert">지원 현황을 불러오지 못했습니다.</p>}
-    {!error && !(applications ?? []).length && <div className="empty">
+    {!error && (count ?? 0) === 0 && <div className="empty">
       <h3>아직 지원한 기회가 없습니다.</h3>
       <p>참여하고 싶은 기회를 찾아 첫 지원서를 남겨보세요.</p>
       <Link href="/opportunity" className="inline-action">기회 탐색 →</Link>
+    </div>}
+    {!error && (count ?? 0) > 0 && !(applications ?? []).length && <div className="empty">
+      <h3>이 페이지에는 지원 내역이 없습니다.</h3>
+      <Link href={`/opportunity/applications?page=${totalPages}`} className="inline-action">마지막 페이지로 이동 →</Link>
     </div>}
     <section className="match-list" aria-label="내 지원 목록">
       {(applications ?? []).map((app) => {
@@ -75,5 +86,12 @@ export default async function MyOpportunityApplications() {
         </article>;
       })}
     </section>
+    {!error && (count ?? 0) > 0 && <nav className="opportunity-review-pagination" aria-label="내 지원 페이지 이동">
+      <span className="meta">총 {count}건 · {Math.min(page, totalPages)} / {totalPages}페이지</span>
+      <div className="row">
+        {page > 1 && <Link className="btn secondary" href={`/opportunity/applications?page=${page - 1}`}>이전</Link>}
+        {page < totalPages && <Link className="btn secondary" href={`/opportunity/applications?page=${page + 1}`}>다음</Link>}
+      </div>
+    </nav>}
   </>;
 }
