@@ -12,10 +12,14 @@ const statusLabel: Record<string, string> = {
   withdrawn: "지원 철회",
 };
 
-export default async function OpportunityApplications({ params }: {
+export default async function OpportunityApplications({ params, searchParams }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { id } = await params;
+  const requested = Number((await searchParams).page ?? "1");
+  const page = Number.isSafeInteger(requested) && requested >= 1 ? Math.min(requested, 10000) : 1;
+  const pageSize = 50;
   const { supabase, userId } = await requireUser();
   const { data: opportunity } = await supabase.from("opportunities")
     .select("id,title,created_by")
@@ -23,12 +27,14 @@ export default async function OpportunityApplications({ params }: {
     .maybeSingle();
   if (!opportunity || opportunity.created_by !== userId) notFound();
 
-  const { data: applications, error } = await supabase
+  const { data: applications, error, count } = await supabase
     .from("opportunity_applications")
-    .select("id,applicant_id,proof_id,note,status,created_at,reviewed_at")
+    .select("id,applicant_id,proof_id,note,status,created_at,reviewed_at", { count: "exact" })
     .eq("opportunity_id", id)
     .order("created_at", { ascending: false })
-    .limit(150);
+    .order("id", { ascending: false })
+    .range((page - 1) * pageSize, page * pageSize - 1);
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
 
   const applicationIds = (applications ?? []).filter(a=>a.status === "accepted").map(a=>a.id);
   const { data: outcomes } = applicationIds.length
@@ -60,9 +66,13 @@ export default async function OpportunityApplications({ params }: {
       </div>
     </header>
     {error && <p className="error notice" role="alert">지원서를 불러오지 못했습니다.</p>}
-    {!error && !(applications ?? []).length && <div className="empty">
+    {!error && (count ?? 0) === 0 && <div className="empty">
       <h3>아직 지원자가 없습니다.</h3>
       <p>새 지원이 들어오면 이곳에서 확인하고 심사할 수 있어요.</p>
+    </div>}
+    {!error && (count ?? 0) > 0 && !(applications ?? []).length && <div className="empty">
+      <h3>이 페이지에는 지원자가 없습니다.</h3>
+      <Link href={`/opportunity/${id}/applications?page=${totalPages}`} className="inline-action">마지막 페이지로 이동 →</Link>
     </div>}
     <section className="opportunity-applicant-list" aria-label="지원자 목록">
       {(applications ?? []).map((app) => {
@@ -102,5 +112,12 @@ export default async function OpportunityApplications({ params }: {
         </article>;
       })}
     </section>
+    {!error && (count ?? 0) > 0 && <nav className="opportunity-review-pagination" aria-label="지원자 페이지 이동">
+      <span className="meta">총 {count}명 · {page > totalPages ? totalPages : page} / {totalPages}페이지</span>
+      <div className="row">
+        {page > 1 && <Link className="btn secondary" href={`/opportunity/${id}/applications?page=${page - 1}`}>이전</Link>}
+        {page < totalPages && <Link className="btn secondary" href={`/opportunity/${id}/applications?page=${page + 1}`}>다음</Link>}
+      </div>
+    </nav>}
   </>;
 }
