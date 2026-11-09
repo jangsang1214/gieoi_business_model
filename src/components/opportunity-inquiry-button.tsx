@@ -36,6 +36,8 @@ export function OpportunityInquiryButton({ userId, ownerId, opportunityId, oppor
         .from("conversations")
         .select("id")
         .eq("kind", "request")
+        .is("team_id", null)
+        .eq("title", "기회 문의")
         .contains("participant_ids", participants)
         .order("created_at", { ascending: false })
         .limit(1)
