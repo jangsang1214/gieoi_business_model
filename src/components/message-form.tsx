@@ -2,8 +2,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { messagesFor, type Locale } from "@/lib/i18n";
 
-export function MessageForm({ conversationId, userId }: { conversationId: string; userId: string }) {
+export function MessageForm({ conversationId, userId, locale = "ko" }: { conversationId: string; userId: string; locale?: Locale }) {
+  const t = messagesFor(locale).messages;
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -17,14 +19,14 @@ export function MessageForm({ conversationId, userId }: { conversationId: string
     const body = text.trim();
     const { error: sendError } = await createClient().from("messages")
       .insert({ conversation_id: conversationId, sender_id: userId, body, message_type: "text" });
-    if (sendError) setError("메시지를 보내지 못했습니다. 다시 시도해 주세요.");
+    if (sendError) setError(t.sendError);
     else { setText(""); router.refresh(); }
     setBusy(false);
   }
 
   return <form className="message-compose" onSubmit={submit}>
-    <input value={text} onChange={(e) => setText(e.target.value)} placeholder="메시지를 입력하세요" disabled={busy} maxLength={4000} />
-    <button className="btn primary" type="submit" disabled={busy || !text.trim()}>{busy ? "전송 중" : "보내기"}</button>
+    <input value={text} onChange={(e) => setText(e.target.value)} placeholder={t.writePlaceholder} disabled={busy} maxLength={4000} />
+    <button className="btn primary" type="submit" disabled={busy || !text.trim()}>{busy ? t.sending : t.send}</button>
     {error && <div role="alert" className="error notice">{error}</div>}
   </form>;
 }
