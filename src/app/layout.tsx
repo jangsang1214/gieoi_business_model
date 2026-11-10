@@ -15,6 +15,8 @@ import "./v11.css";
 import "./v15.css";
 import "./v16.css";
 import "./v19.css";
+import "./i18n.css";
+import { getLocale } from "@/lib/i18n-server";
 
 const sans = Noto_Sans_KR({
   variable: "--font-gieoi-sans",
@@ -42,6 +44,7 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0a",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ko" className={`${sans.variable} ${serif.variable}`}><body>{children}</body></html>;
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
+  return <html lang={locale} className={`${sans.variable} ${serif.variable}`}><body>{children}</body></html>;
 }
