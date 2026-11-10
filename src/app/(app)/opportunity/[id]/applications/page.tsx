@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { OpportunityApplicationReview } from "@/components/opportunity-application-review";
 import { OpportunityOutcomeReview } from "@/components/opportunity-outcome-review";
 import { StartDmButton } from "@/components/start-dm-button";
+import { getLocale } from "@/lib/i18n-server";
 
 const statusLabel: Record<string, string> = {
   pending: "검토 대기",
@@ -21,6 +22,8 @@ export default async function OpportunityApplications({ params, searchParams }: 
   const page = Number.isSafeInteger(requested) && requested >= 1 ? Math.min(requested, 10000) : 1;
   const pageSize = 50;
   const { supabase, userId } = await requireUser();
+  const locale = await getLocale();
+  const en = locale === "en";
   const { data: opportunity } = await supabase.from("opportunities")
     .select("id,title,created_by")
     .eq("id", id)
@@ -61,62 +64,62 @@ export default async function OpportunityApplications({ params, searchParams }: 
 
   return <>
     <header className="utility-head">
-      <div><Link href={`/opportunity/${id}`} className="meta">← 기회 상세</Link>
-        <h1>지원자 관리</h1><p>{opportunity.title}</p>
+      <div><Link href={`/opportunity/${id}`} className="meta">← {en ? "Opportunity details" : "기회 상세"}</Link>
+        <h1>{en ? "Manage applications" : "지원자 관리"}</h1><p>{opportunity.title}</p>
       </div>
     </header>
-    {error && <p className="error notice" role="alert">지원서를 불러오지 못했습니다.</p>}
+    {error && <p className="error notice" role="alert">{en ? "Could not load applications." : "지원서를 불러오지 못했습니다."}</p>}
     {!error && (count ?? 0) === 0 && <div className="empty">
-      <h3>아직 지원자가 없습니다.</h3>
-      <p>새 지원이 들어오면 이곳에서 확인하고 심사할 수 있어요.</p>
+      <h3>{en ? "No applicants yet." : "아직 지원자가 없습니다."}</h3>
+      <p>{en ? "Applications will appear here for review." : "새 지원이 들어오면 이곳에서 확인하고 심사할 수 있어요."}</p>
     </div>}
     {!error && (count ?? 0) > 0 && !(applications ?? []).length && <div className="empty">
-      <h3>이 페이지에는 지원자가 없습니다.</h3>
-      <Link href={`/opportunity/${id}/applications?page=${totalPages}`} className="inline-action">마지막 페이지로 이동 →</Link>
+      <h3>{en ? "No applicants on this page." : "이 페이지에는 지원자가 없습니다."}</h3>
+      <Link href={`/opportunity/${id}/applications?page=${totalPages}`} className="inline-action">{en ? "Last page" : "마지막 페이지로 이동"} →</Link>
     </div>}
-    <section className="opportunity-applicant-list" aria-label="지원자 목록">
+    <section className="opportunity-applicant-list" aria-label={en ? "Applicants" : "지원자 목록"}>
       {(applications ?? []).map((app) => {
         const person = profileMap.get(app.applicant_id);
         const proof = app.proof_id ? proofMap.get(app.proof_id) : null;
         return <article className="match-card opportunity-applicant-card" key={app.id}>
           <div className="row opportunity-application-head">
             <div className="grow">
-              <div className="mini-label">지원 · {new Date(app.created_at).toLocaleDateString("ko-KR")}</div>
-              <h2>{person?.display_name || person?.handle || "지원자"}</h2>
+              <div className="mini-label">{en ? "Applied" : "지원"} · {new Date(app.created_at).toLocaleDateString(en ? "en-US" : "ko-KR")}</div>
+              <h2>{person?.display_name || person?.handle || (en ? "Applicant" : "지원자")}</h2>
             </div>
-            <span className="stage-pill">{statusLabel[app.status] ?? app.status}</span>
+            <span className="stage-pill">{en ? ({pending:"Pending", accepted:"Accepted", rejected:"Rejected", withdrawn:"Withdrawn"} as Record<string,string>)[app.status] ?? app.status : (statusLabel[app.status] ?? app.status)}</span>
           </div>
           <p className="match-mission opportunity-applicant-note">{app.note}</p>
           <div className="opportunity-applicant-links">
-            {person?.discoverable && <Link href={`/profile/${app.applicant_id}`} className="inline-action">공개 프로필 →</Link>}
+            {person?.discoverable && <Link href={`/profile/${app.applicant_id}`} className="inline-action">{en ? "Public profile" : "공개 프로필"} →</Link>}
             {proof && proof.owner_id === app.applicant_id &&
-              <Link href={`/proof/${proof.id}`} className="inline-action">첨부된 Proof · {proof.title} →</Link>}
+              <Link href={`/proof/${proof.id}`} className="inline-action">{en ? "Linked Proof" : "첨부된 Proof"} · {proof.title} →</Link>}
           </div>
-          {app.status === "pending" && <OpportunityApplicationReview applicationId={app.id}/>}
+          {app.status === "pending" && <OpportunityApplicationReview applicationId={app.id} locale={locale}/>}
           {app.status === "accepted" && <>
-            {person?.discoverable && <StartDmButton me={userId} target={app.applicant_id}/>}
+            {person?.discoverable && <StartDmButton me={userId} target={app.applicant_id} locale={locale}/>}
             {outcomeMap.has(app.id) && (() => {
               const outcome = outcomeMap.get(app.id)!;
               const outcomeProof = outcome.proof_id ? proofMap.get(outcome.proof_id) : null;
-              return <section className="opportunity-outcome-box" aria-label="협업 결과 확인">
+              return <section className="opportunity-outcome-box" aria-label={en ? "Collaboration outcome review" : "협업 결과 확인"}>
                 <div className="mini-label">COLLABORATION OUTCOME</div>
                 <h3>{outcome.title}</h3><p>{outcome.summary}</p>
                 {outcomeProof && outcomeProof.owner_id === app.applicant_id &&
-                  <Link href={`/proof/${outcomeProof.id}`} className="inline-action">연결된 공개 Proof →</Link>}
-                <div className="meta">{outcome.status === "confirmed" ? "상호 확인됨"
-                  : outcome.status === "declined" ? "확인 거절됨" : "확인 요청 도착"}</div>
-                {outcome.status === "pending" && <OpportunityOutcomeReview outcomeId={outcome.id}/>}
+                  <Link href={`/proof/${outcomeProof.id}`} className="inline-action">{en ? "Linked public Proof" : "연결된 공개 Proof"} →</Link>}
+                <div className="meta">{outcome.status === "confirmed" ? (en ? "Mutually confirmed" : "상호 확인됨")
+                  : outcome.status === "declined" ? (en ? "Declined" : "확인 거절됨") : (en ? "Awaiting confirmation" : "확인 요청 도착")}</div>
+                {outcome.status === "pending" && <OpportunityOutcomeReview outcomeId={outcome.id} locale={locale}/>}
               </section>;
             })()}
           </>}
         </article>;
       })}
     </section>
-    {!error && (count ?? 0) > 0 && <nav className="opportunity-review-pagination" aria-label="지원자 페이지 이동">
-      <span className="meta">총 {count}명 · {page > totalPages ? totalPages : page} / {totalPages}페이지</span>
+    {!error && (count ?? 0) > 0 && <nav className="opportunity-review-pagination" aria-label={en ? "Applicant pages" : "지원자 페이지 이동"}>
+      <span className="meta">{en ? "Total" : "총"} {count}{en ? " applicants" : "명"} · {page > totalPages ? totalPages : page} / {totalPages}{en ? " pages" : "페이지"}</span>
       <div className="row">
-        {page > 1 && <Link className="btn secondary" href={`/opportunity/${id}/applications?page=${page - 1}`}>이전</Link>}
-        {page < totalPages && <Link className="btn secondary" href={`/opportunity/${id}/applications?page=${page + 1}`}>다음</Link>}
+        {page > 1 && <Link className="btn secondary" href={`/opportunity/${id}/applications?page=${page - 1}`}>{en ? "Previous" : "이전"}</Link>}
+        {page < totalPages && <Link className="btn secondary" href={`/opportunity/${id}/applications?page=${page + 1}`}>{en ? "Next" : "다음"}</Link>}
       </div>
     </nav>}
   </>;
