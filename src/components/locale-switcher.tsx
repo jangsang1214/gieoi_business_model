@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { messagesFor, type Locale } from "@/lib/i18n";
 
@@ -10,6 +10,9 @@ export function LocaleSwitcher({ locale, compact = false }: { locale: Locale; co
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const t = messagesFor(locale);
+
+  // Keep all switches in sync when another language control refreshes the layout.
+  useEffect(() => { setSelected(locale); }, [locale]);
 
   async function change(next: Locale) {
     if (busy || next === selected) return;
