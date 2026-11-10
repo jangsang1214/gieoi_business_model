@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale } from "@/lib/i18n-server";
+import { messagesFor } from "@/lib/i18n";
 import { requireUser } from "@/lib/auth";
 import { OpportunityInquiryButton } from "@/components/opportunity-inquiry-button";
 import { OpportunityApplicationForm } from "@/components/opportunity-application-form";
@@ -9,6 +11,8 @@ import { opportunityDomainLabel, opportunityKindLabel, opportunityReasons } from
 export default async function OpportunityDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase, userId } = await requireUser();
+  const locale = await getLocale();
+  const t = messagesFor(locale).opportunity;
   const { data: opportunity } = await supabase.from("opportunities")
     .select("*")
     .eq("id", id)
@@ -30,42 +34,42 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
   const signals = { ...(direction ?? {}), preferred_domains: [...new Set([
     ...(direction?.preferred_domains ?? []), ...(ownProfile?.primary_domains ?? []),
   ])] };
-  const reasons = opportunityReasons(signals, opportunity);
+  const reasons = opportunityReasons(signals, opportunity, locale);
   const isOwner = opportunity.created_by === userId;
   const canContact = !isOwner && owner?.discoverable === true;
 
   return <>
     <header className="utility-head">
-      <div><Link href="/opportunity" className="meta">← 기회</Link>
-        <div className="mini-label">{opportunityKindLabel(opportunity.kind)} · {opportunityDomainLabel(opportunity.domain)}</div>
+      <div><Link href="/opportunity" className="meta">← {t.back}</Link>
+        <div className="mini-label">{opportunityKindLabel(opportunity.kind, locale)} · {opportunityDomainLabel(opportunity.domain, locale)}</div>
         <h1>{opportunity.title}</h1>
         <p>{opportunity.organization_name}</p>
       </div>
     </header>
     <article className="opportunity-detail-v16">
       <div className="opportunity-detail-meta-v16">
-        <span>{new Date(opportunity.created_at).toLocaleDateString("ko-KR")}</span>
-        {opportunity.verified_organization && <span>인증된 기관</span>}
-        {opportunity.desired_stage && <span>진행 단계 · {opportunity.desired_stage}</span>}
+        <span>{new Date(opportunity.created_at).toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US")}</span>
+        {opportunity.verified_organization && <span>{t.verified}</span>}
+        {opportunity.desired_stage && <span>{t.stage} · {opportunity.desired_stage}</span>}
       </div>
 
-      {reasons.length > 0 && <section className="opportunity-detail-match" aria-label="기회 추천 이유">
-        <h2>왜 나에게 추천했을까요?</h2>
+      {reasons.length > 0 && <section className="opportunity-detail-match" aria-label={t.reason}>
+        <h2>{t.why}</h2>
         <ul>{reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
-        <p className="meta">현재 프로필에 등록된 정보 기준이며, 자격이나 선발을 보장하지 않습니다.</p>
+        <p className="meta">{t.reasonDisclaimer}</p>
       </section>}
 
-      <h2>기회 소개</h2>
-      <p className="opportunity-description-v16">{opportunity.description || "아직 상세 소개가 없습니다."}</p>
+      <h2>{t.description}</h2>
+      <p className="opportunity-description-v16">{opportunity.description || t.noDescription}</p>
 
       {(opportunity.required_skills?.length ?? 0) > 0 && <div className="opportunity-skill-list-v16">
-        <h3>필요한 역량</h3>
+        <h3>{t.skills}</h3>
         <div className="badges">{opportunity.required_skills.map((skill: string) =>
           <span className="badge" key={skill}>{skill}</span>
         )}</div>
       </div>}
       {(opportunity.desired_future_tags?.length ?? 0) > 0 && <div className="opportunity-skill-list-v16">
-        <h3>지향하는 방향</h3>
+        <h3>{t.direction}</h3>
         <div className="badges">{opportunity.desired_future_tags.map((tag: string) =>
           <span className="badge" key={tag}>{tag}</span>
         )}</div>
@@ -74,21 +78,21 @@ export default async function OpportunityDetail({ params }: { params: Promise<{ 
       <div className="opportunity-detail-actions-v16">
         {!isOwner && <OpportunityApplicationForm userId={userId} opportunityId={id}
           application={application as { id: string; status: "pending" | "accepted" | "rejected" | "withdrawn" } | null}
-          proofs={myProofs ?? []}/>}
-        {isOwner && <Link className="btn primary" href={`/opportunity/${id}/applications`}>지원자 관리</Link>}
+          proofs={myProofs ?? []} locale={locale}/>}
+        {isOwner && <Link className="btn primary" href={`/opportunity/${id}/applications`}>{t.manage}</Link>}
         {canContact && <OpportunityInquiryButton userId={userId} ownerId={opportunity.created_by}
-          opportunityId={id} opportunityTitle={opportunity.title}/>}
+          opportunityId={id} opportunityTitle={opportunity.title} locale={locale}/>}
         {owner?.discoverable && <Link className="btn secondary"
-          href={isOwner ? "/profile" : `/profile/${owner.id}`}>등록자 프로필</Link>}
+          href={isOwner ? "/profile" : `/profile/${owner.id}`}>{t.owner}</Link>}
         <RecommendationActions userId={userId} targetType="opportunity" targetId={id}
           initialState={(feedback?.state as "saved" | "dismissed" | undefined) ?? null}/>
       </div>
-      {isOwner && <p className="meta">내가 등록한 기회입니다.</p>}
-      {!isOwner && !canContact && <p className="meta">현재 등록자에게 직접 메시지를 보낼 수 없습니다.</p>}
-      <p className="meta">게시된 내용은 등록자가 작성한 정보입니다. 기관 인증 표시가 없으면 공식 인증이 확인되지 않았습니다.</p>
+      {isOwner && <p className="meta">{t.ownListing}</p>}
+      {!isOwner && !canContact && <p className="meta">{t.contactUnavailable}</p>}
+      <p className="meta">{t.sourceDisclaimer}</p>
       <div className="opportunity-detail-footer-links">
-        <Link href="/opportunity/applications" className="inline-action">내 지원 현황 →</Link>
-        <Link href="/opportunity" className="inline-action">다른 기회 보기 →</Link>
+        <Link href="/opportunity/applications" className="inline-action">{t.applications} →</Link>
+        <Link href="/opportunity" className="inline-action">{t.other} →</Link>
       </div>
     </article>
   </>;
