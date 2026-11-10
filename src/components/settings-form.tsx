@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SignOutButton } from "@/components/sign-out-button";
 import { AvatarUploader } from "@/components/avatar-uploader";
+import { messagesFor, type Locale } from "@/lib/i18n";
 
 const domains = [
   ["business", "BUSINESS"],
@@ -40,7 +41,10 @@ type Profile = {
   affiliation_visible: boolean | null;
 };
 
-export function SettingsForm({ profile, email }: { profile: Profile; email: string }) {
+export function SettingsForm({ profile, email, locale = "ko" }: { profile: Profile; email: string; locale?: Locale }) {
+  const t = messagesFor(locale).settings;
+  const common = messagesFor(locale).common;
+  const en = locale === "en";
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -62,7 +66,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
     const form = new FormData(e.currentTarget);
     const displayName = String(form.get("display_name") ?? "").trim();
     if (!displayName) {
-      setMessage("이름을 입력해 주세요.");
+      setMessage(t.nameRequired);
       return;
     }
     setSaving(true);
@@ -88,7 +92,7 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
 
     if (error) setMessage(error.message);
     else {
-      setMessage("변경사항을 저장했습니다.");
+      setMessage(t.success);
       setSaveSuccess(true);
       router.refresh();
     }
@@ -101,30 +105,30 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
         <AvatarUploader userId={profile.id} name={profile.display_name||email} initialPath={profile.avatar_url}/>
         <div className="grow">
           <div className="eyebrow">PROFILE</div>
-          <h2>{profile.display_name || "이름을 남겨주세요"}</h2>
+          <h2>{profile.display_name || t.missingName}</h2>
           <p>{email}</p>
         </div>
       </section>
 
       <section className="settings-card">
-        <div className="settings-heading"><div><span>01</span><h3>프로필</h3></div></div>
-        <label className="field"><span>이름</span><input name="display_name" defaultValue={profile.display_name ?? ""} placeholder="당신의 이름" required maxLength={60} autoComplete="nickname" /></label>
-        <label className="field"><span>아이디</span><div className="input-prefix"><b>@</b><input name="handle" defaultValue={profile.handle ?? ""} placeholder="yourname" /></div></label>
-        <label className="field"><span>한 줄 소개</span><input name="headline" defaultValue={profile.headline ?? ""} placeholder="지금 무엇을 하고 있나요?" maxLength={90} /></label>
-        <label className="field"><span>소개</span><textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} placeholder="필요한 만큼만 적어주세요." maxLength={280} /></label>
+        <div className="settings-heading"><div><span>01</span><h3>{t.profile}</h3></div></div>
+        <label className="field"><span>{t.name}</span><input name="display_name" defaultValue={profile.display_name ?? ""} placeholder={t.namePlaceholder} required maxLength={60} autoComplete="nickname" /></label>
+        <label className="field"><span>{t.id}</span><div className="input-prefix"><b>@</b><input name="handle" defaultValue={profile.handle ?? ""} placeholder="yourname" /></div></label>
+        <label className="field"><span>{t.headline}</span><input name="headline" defaultValue={profile.headline ?? ""} placeholder={t.headlinePlaceholder} maxLength={90} /></label>
+        <label className="field"><span>{t.bio}</span><textarea name="bio" defaultValue={profile.bio ?? ""} rows={4} placeholder={t.bioPlaceholder} maxLength={280} /></label>
       </section>
 
       <section className="settings-card">
-        <div className="settings-heading"><div><span>02</span><h3>현재 소속</h3></div><p>회사, 학교, 연구실 등. 선택 사항입니다.</p></div>
+        <div className="settings-heading"><div><span>02</span><h3>{t.affiliation}</h3></div><p>{t.affiliationHelp}</p></div>
         <div className="settings-two-col">
-          <label className="field"><span>소속</span><input name="affiliation_name" defaultValue={profile.affiliation_name ?? ""} placeholder="예: NAVER, 한동대학교" /></label>
-          <label className="field"><span>역할</span><input name="affiliation_role" defaultValue={profile.affiliation_role ?? ""} placeholder="예: Backend Engineer" /></label>
+          <label className="field"><span>{t.affiliationName}</span><input name="affiliation_name" defaultValue={profile.affiliation_name ?? ""} placeholder={t.affiliationPlaceholder} /></label>
+          <label className="field"><span>{t.role}</span><input name="affiliation_role" defaultValue={profile.affiliation_role ?? ""} placeholder={t.rolePlaceholder} /></label>
         </div>
-        <div className="setting-inline-row"><span>프로필에 표시</span><button type="button" aria-label="현재 소속 표시" className={affiliationVisible ? "switch on" : "switch"} onClick={() => setAffiliationVisible((v) => !v)}><span /></button></div>
+        <div className="setting-inline-row"><span>{t.visible}</span><button type="button" aria-label={t.visible} className={affiliationVisible ? "switch on" : "switch"} onClick={() => setAffiliationVisible((v) => !v)}><span /></button></div>
       </section>
 
       <section className="settings-card">
-        <div className="settings-heading"><div><span>03</span><h3>나의 분야</h3></div></div>
+        <div className="settings-heading"><div><span>03</span><h3>{t.domains}</h3></div></div>
         <div className="choice-grid">
           {domains.map(([value, label]) => (
             <button key={value} type="button" className={domainsValue.includes(value) ? "choice active" : "choice"} onClick={() => toggle(domainsValue, value, setDomainsValue)}>{label}</button>
@@ -142,17 +146,17 @@ export function SettingsForm({ profile, email }: { profile: Profile; email: stri
       </section>
 
       <section className="settings-card setting-row-card">
-        <div><div className="settings-heading inline"><div><span>05</span><h3>발견 허용</h3></div></div><p>꺼두면 탐색과 Scout에 노출되지 않습니다.</p></div>
-        <button type="button" aria-label="발견 허용" className={discoverable ? "switch on" : "switch"} onClick={() => setDiscoverable((v) => !v)}><span /></button>
+        <div><div className="settings-heading inline"><div><span>05</span><h3>{t.discoverable}</h3></div></div><p>{t.discoverableHelp}</p></div>
+        <button type="button" aria-label={t.discoverable} className={discoverable ? "switch on" : "switch"} onClick={() => setDiscoverable((v) => !v)}><span /></button>
       </section>
 
       {message && <div role={saveSuccess ? "status" : "alert"} className={saveSuccess ? "success notice" : "error notice"}>{message}</div>}
-      <button className="btn primary full settings-save" disabled={saving}>{saving ? "저장 중..." : "변경사항 저장"}</button>
+      <button className="btn primary full settings-save" disabled={saving}>{saving ? common.saving : common.save}</button>
 
       <section className="settings-card account-card">
-        <div className="settings-heading"><div><span>06</span><h3>계정</h3></div></div>
+        <div className="settings-heading"><div><span>06</span><h3>{t.account}</h3></div></div>
         <div className="account-email"><span>EMAIL</span><b>{email}</b></div>
-        <SignOutButton />
+        <SignOutButton locale={locale} />
       </section>
     </form>
   );
