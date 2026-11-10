@@ -2,24 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { messagesFor, type Locale } from "@/lib/i18n";
 
 const desktopItems = [
-  ["/", "홈", "home"],
-  ["/explore", "탐색", "search"],
-  ["/team", "TEAM", "team"],
-  ["/opportunity", "기회", "opportunity"],
-  ["/messages", "메시지", "message"],
-  ["/notifications", "알림", "bell"],
-  ["/profile", "내 삶", "profile"],
+  ["/", "home", "home"], ["/explore", "explore", "search"],
+  ["/team", "team", "team"], ["/opportunity", "opportunity", "opportunity"],
+  ["/messages", "messages", "message"], ["/notifications", "notifications", "bell"],
+  ["/profile", "profile", "profile"],
 ] as const;
 
 const mobileItems = [
-  ["/", "홈", "home"],
-  ["/explore", "탐색", "search"],
-  ["/team", "TEAM", "team"],
-  ["/opportunity", "기회", "opportunity"],
-  ["/messages", "메시지", "message"],
-  ["/profile", "내 삶", "profile"],
+  ["/", "home", "home"], ["/explore", "explore", "search"],
+  ["/team", "team", "team"], ["/opportunity", "opportunity", "opportunity"],
+  ["/messages", "messages", "message"], ["/profile", "profile", "profile"],
 ] as const;
 
 function NavIcon({ name }: { name: string }) {
@@ -36,18 +31,20 @@ function activeFor(path: string, href: string) {
   return href === "/" ? path === "/" : path.startsWith(href);
 }
 
-function ActiveLink({ href, label, icon }: { href: string; label: string; icon: string }) {
+function ActiveLink({ href, label, icon, locale }: { href: string; label: string; icon: string; locale: Locale }) {
+  const t = messagesFor(locale);
   const path = usePathname();
   const active = activeFor(path, href);
   return (
     <Link href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
       <span className="nav-icon"><NavIcon name={icon} /></span>
-      <span>{label}</span>
+      <span>{t.nav[label as keyof typeof t.nav]}</span>
     </Link>
   );
 }
 
-export function DesktopNav() {
+export function DesktopNav({ locale }: { locale: Locale }) {
+  const t = messagesFor(locale);
   const path = usePathname();
   return (
     <>
@@ -57,7 +54,7 @@ export function DesktopNav() {
           return (
             <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}>
               <span className="nav-icon"><NavIcon name={icon} /></span>
-              <span className="rail-label">{label}</span>
+              <span className="rail-label">{t.nav[label as keyof typeof t.nav]}</span>
             </Link>
           );
         })}
@@ -66,17 +63,17 @@ export function DesktopNav() {
       <div className="rail-bottom">
         <Link href="/settings" className={path.startsWith("/settings") ? "active" : ""}>
           <span className="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.08-1l2-1.55-2-3.46-2.46.99a7 7 0 0 0-1.72-1L14.4 3h-4.8l-.34 2.98a7 7 0 0 0-1.72 1L5.08 6l-2 3.46L5.08 11A7 7 0 0 0 5 12c0 .34.03.68.08 1l-2 1.55 2 3.46 2.46-.99a7 7 0 0 0 1.72 1L9.6 21h4.8l.34-2.98a7 7 0 0 0 1.72-1l2.46.99 2-3.46L18.92 13c.05-.32.08-.66.08-1Z"/></svg></span>
-          <span className="rail-label">설정</span>
+          <span className="rail-label">{t.nav.settings}</span>
         </Link>
       </div>
     </>
   );
 }
 
-export function BottomNav() {
+export function BottomNav({ locale }: { locale: Locale }) {
   return (
     <nav className="bottom-nav" aria-label="주요 메뉴">
-      {mobileItems.map(([href, label, icon]) => <ActiveLink key={href} href={href} label={label} icon={icon} />)}
+      {mobileItems.map(([href, label, icon]) => <ActiveLink key={href} href={href} label={label} icon={icon} locale={locale} />)}
     </nav>
   );
 }
