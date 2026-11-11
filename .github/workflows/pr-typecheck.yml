@@ -18,3 +18,4 @@ jobs:
           node-version: '22'
       - run: npm install --no-package-lock --ignore-scripts
       - run: npx tsc --noEmit
+      - run: node --experimental-strip-types --test tests/safe-next-path.test.mjs
