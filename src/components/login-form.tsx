@@ -117,6 +117,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
         </button>
       </div>
 
+      <div className="auth-switch"><Link href="/about">{locale === "en" ? "What is prof.?" : "prof.는 어떤 서비스인가요?"}</Link></div>
       <p className="auth-footnote">{locale === "en" ? "prof. is in beta. Our Terms and Privacy Policy are being finalized before public recruitment." : "프로프는 베타 서비스입니다. 공개 모집 전 이용약관과 개인정보 처리방침을 최종 정비하고 있습니다."}</p>
     </div>
   );
