@@ -69,13 +69,14 @@ export function SettingsForm({ profile, email, locale = "ko" }: { profile: Profi
       setMessage(t.nameRequired);
       return;
     }
+    if (saving) return;
     setSaving(true);
-    const supabase = createClient();
     const handle = String(form.get("handle") || "").trim().replace(/^@/, "").toLowerCase();
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
+    try {
+      const { data, error } = await createClient()
+        .from("profiles")
+        .update({
         display_name: displayName,
         handle: handle || null,
         headline: String(form.get("headline") || "").trim() || null,
@@ -88,15 +89,22 @@ export function SettingsForm({ profile, email, locale = "ko" }: { profile: Profi
         discoverable,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", profile.id);
+      .eq("id", profile.id)
+      .select("id")
+      .maybeSingle();
 
-    if (error) setMessage(error.message);
-    else {
+      if (error || !data) {
+        setMessage(en ? "Couldn't save your profile. Please try again." : "프로필을 저장하지 못했습니다. 다시 시도해 주세요.");
+        return;
+      }
       setMessage(t.success);
       setSaveSuccess(true);
       router.refresh();
+    } catch {
+      setMessage(en ? "Connection problem. Please try again." : "연결에 문제가 생겼습니다. 다시 시도해 주세요.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   }
 
   return (
