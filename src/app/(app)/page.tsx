@@ -7,6 +7,7 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 import { RecordSocialActions } from "@/components/record-social-actions";
 import { getLocale } from "@/lib/i18n-server";
 import { messagesFor } from "@/lib/i18n";
+import { recordReactions } from "@/lib/record-reactions";
 
 const domains = ["business", "workout", "create", "study", "career", "lifestyle"] as const;
 
@@ -53,15 +54,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
   });
   const feed = ranked.slice(0, 30);
   const feedIds = feed.map((r: {id:string}) => r.id);
-  const { data: reactions } = feedIds.length
-    ? await supabase.from("record_likes").select("record_id,user_id").in("record_id",feedIds)
-    : { data: [] as { record_id:string; user_id:string }[] };
-  const reactionCount = new Map<string, number>();
-  const reactedByMe = new Set<string>();
-  for (const reaction of reactions ?? []) {
-    reactionCount.set(reaction.record_id,(reactionCount.get(reaction.record_id) ?? 0)+1);
-    if(reaction.user_id===userId) reactedByMe.add(reaction.record_id);
-  }
+  const reactions = await recordReactions(supabase, feedIds, userId);
 
   return (
     <>
@@ -100,7 +93,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
             <p>{r.body}</p>
             <RecordMedia media={r.media} />
             <RecordSocialActions recordId={r.id} userId={userId} locale={locale}
-              initiallyLiked={reactedByMe.has(r.id)} initialLikes={reactionCount.get(r.id) ?? 0}
+              initiallyLiked={reactions.get(r.id)?.liked ?? false} initialLikes={reactions.get(r.id)?.count ?? 0}
+              unavailable={reactions.get(r.id)?.unavailable ?? true}
               commentsAllowed={r.visibility === "public"}/>
             {(r.goals?.title || r.teams?.name) && <div className="linked">
               {r.goals?.title && <span className="chip">Goal · {r.goals.title}</span>}

@@ -9,6 +9,7 @@ import { RecordDeleteButton } from "@/components/record-delete-button";
 import { ReportButton } from "@/components/report-button";
 import { RecordSocialActions } from "@/components/record-social-actions";
 import { getLocale } from "@/lib/i18n-server";
+import { recordReactions } from "@/lib/record-reactions";
 
 export default async function RecordDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,7 +23,7 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
     record.team_id ? supabase.from("teams").select("id,name").eq("id",record.team_id).maybeSingle() : Promise.resolve({data:null as {id:string;name:string}|null}),
     supabase.from("proofs").select("id,title").eq("record_id",id).limit(1).maybeSingle(),
   ]);
-  const { data: reactions } = await supabase.from("record_likes").select("user_id").eq("record_id",id);
+  const reaction = (await recordReactions(supabase, [id], userId)).get(id);
   const profileHref = record.author_id === userId ? "/profile" : `/profile/${record.author_id}`;
   const { data: comments } = record.visibility === "public"
     ? await supabase.from("record_comments").select("id,author_id,body,created_at").eq("record_id",id).order("created_at",{ascending:true}).limit(100)
@@ -49,8 +50,9 @@ export default async function RecordDetail({ params }: { params: Promise<{ id: s
       {record.body && <p className="record-detail-body">{record.body}</p>}
       <RecordMedia media={record.media}/>
       <RecordSocialActions recordId={id} userId={userId} locale={locale}
-        initialLikes={reactions?.length ?? 0}
-        initiallyLiked={Boolean(reactions?.some(item=>item.user_id===userId))}
+        initialLikes={reaction?.count ?? 0}
+        initiallyLiked={reaction?.liked ?? false}
+        unavailable={reaction?.unavailable ?? true}
         commentsAllowed={record.visibility==="public"} />
       {record.author_id !== userId && <ReportButton userId={userId} targetType="record" targetId={id}/>} 
       {record.author_id === userId && <div className="record-owner-actions">

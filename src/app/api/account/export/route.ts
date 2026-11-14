@@ -43,12 +43,12 @@ export async function GET() {
   }
 
   const results = await Promise.all(exportSections.map(async ([label, table, ownerColumn]) => {
-    const { data, error } = await supabase.from(table).select("*")
-      .eq(ownerColumn, user.id).limit(MAX_ROWS_PER_SECTION + 1);
-    return { label, data, error };
+    const { data, error, count } = await supabase.from(table).select("*", { count: "exact" })
+      .eq(ownerColumn, user.id).limit(MAX_ROWS_PER_SECTION);
+    return { label, data, error, count };
   }));
 
-  const failure = results.find(result => result.error);
+  const failure = results.find(result => result.error || result.count === null);
   if (failure) {
     console.error("Privacy export query failed", failure.label);
     return NextResponse.json({ error: "Could not prepare the archive. Please retry." }, { status: 503 });
@@ -57,7 +57,7 @@ export async function GET() {
   const sections = Object.fromEntries(results.map(result => [
     result.label, {
       rows: (result.data ?? []).slice(0, MAX_ROWS_PER_SECTION),
-      truncated: (result.data?.length ?? 0) > MAX_ROWS_PER_SECTION,
+      truncated: (result.count ?? 0) > (result.data?.length ?? 0),
     },
   ]));
 

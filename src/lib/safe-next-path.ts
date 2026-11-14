@@ -8,7 +8,7 @@ export function safeNextPath(input: string | null | undefined, fallback = "/"): 
   try {
     const base = "https://prof.local.invalid";
     const target = new URL(input, base);
-    return target.origin === base && target.pathname.startsWith("/")
+    return target.origin === base && target.pathname.startsWith("/") && !target.pathname.startsWith("//")
       ? target.pathname + target.search + target.hash
       : fallback;
   } catch {
