@@ -8,6 +8,7 @@ const allowedDomains = new Set(["business", "workout", "create", "study", "caree
 
 export function GoalForm({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -38,6 +39,7 @@ export function GoalForm({ userId }: { userId: string }) {
         setError("Goal을 저장하지 못했습니다. 입력 내용은 유지되니 다시 시도해 주세요.");
         return;
       }
+      setDraft("");
       setOpen(false);
       router.refresh();
     } catch {
@@ -56,8 +58,13 @@ export function GoalForm({ userId }: { userId: string }) {
         <div className="grab" />
         <h2>새 Goal</h2>
         <label className="field">무엇을 이루고 싶나요?
-          <input name="title" placeholder="예: 첫 제품 출시, 대회 본선 진출" maxLength={120} required disabled={busy}/>
+          <input name="title" placeholder="예: 첫 제품 출시, 대회 본선 진출" maxLength={120} required disabled={busy}
+            value={draft} onChange={event=>setDraft(event.target.value)}/>
         </label>
+        <div className="onboarding-examples" aria-label="목표 예시">
+          {["첫 프로젝트 출시하기","일주일에 3번 운동하기","한 달간 매일 공부하기"].map(example=><button
+            type="button" className="btn secondary" key={example} onClick={()=>setDraft(example)} disabled={busy}>{example}</button>)}
+        </div>
         <label className="field">분야
           <select name="domain" disabled={busy}>
             <option value="business">BUSINESS</option>

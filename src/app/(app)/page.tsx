@@ -4,8 +4,10 @@ import { FeedPrompt } from "@/components/feed-prompt";
 import { RecordMedia } from "@/components/record-media";
 import { GettingStarted } from "@/components/getting-started";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { RecordSocialActions } from "@/components/record-social-actions";
 import { getLocale } from "@/lib/i18n-server";
 import { messagesFor } from "@/lib/i18n";
+import { recordReactions } from "@/lib/record-reactions";
 
 const domains = ["business", "workout", "create", "study", "career", "lifestyle"] as const;
 
@@ -51,6 +53,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
     return score(b) - score(a);
   });
   const feed = ranked.slice(0, 30);
+  const feedIds = feed.map((r: {id:string}) => r.id);
+  const reactions = await recordReactions(supabase, feedIds, userId);
 
   return (
     <>
@@ -88,7 +92,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <div className="post-copy">
             <p>{r.body}</p>
             <RecordMedia media={r.media} />
-            <Link href={`/record/${r.id}`} className="post-comment-link">{r.visibility === "public" ? t.home.viewComments : t.home.viewRecord} →</Link>
+            <RecordSocialActions recordId={r.id} userId={userId} locale={locale}
+              initiallyLiked={reactions.get(r.id)?.liked ?? false} initialLikes={reactions.get(r.id)?.count ?? 0}
+              unavailable={reactions.get(r.id)?.unavailable ?? true}
+              commentsAllowed={r.visibility === "public"}/>
             {(r.goals?.title || r.teams?.name) && <div className="linked">
               {r.goals?.title && <span className="chip">Goal · {r.goals.title}</span>}
               {r.teams?.name && <Link href={`/team/${r.teams.id}`} className="chip chip-link">TEAM · {r.teams.name}</Link>}

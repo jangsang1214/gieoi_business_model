@@ -73,7 +73,7 @@ export function RecordComments({ recordId, userId, recordOwnerId, initial }: {
     setBusy(false);
   }
 
-  return <section className="record-comments-v10" aria-label="댓글">
+  return <section id="comments" className="record-comments-v10" aria-label="댓글">
     <header><h2>댓글 <span>{comments.length}</span></h2></header>
     {comments.length ? <div className="record-comment-list">
       {comments.map((c) => <article className="record-comment" key={c.id}>

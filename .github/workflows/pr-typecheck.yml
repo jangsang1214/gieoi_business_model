@@ -1,7 +1,7 @@
 name: PR Typecheck
 on:
   push:
-    branches: [feat/pr19-social-essentials]
+    branches: [main, feat/pr19-social-essentials]
   pull_request:
     branches: [main]
 permissions:
@@ -16,6 +16,11 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-      - run: npm install --no-package-lock --ignore-scripts
+      - run: npm ci --ignore-scripts
       - run: npx tsc --noEmit
-      - run: node --experimental-strip-types --test tests/safe-next-path.test.mjs
+      - run: node --experimental-strip-types --test tests/*.test.mjs
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: verification-placeholder
+
