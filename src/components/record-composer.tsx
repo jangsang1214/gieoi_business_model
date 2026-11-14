@@ -169,6 +169,13 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
           <label className="field composer-body">{type === "proof" ? t.achieved : t.doing}
             <textarea rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder={type === "proof" ? t.proofHint : t.journeyHint} disabled={busy}/>
           </label>
+          <div className="onboarding-examples" aria-label={locale === "en" ? "Writing starters" : "기록 시작 문구"}>
+            {(type === "proof"
+              ? (locale === "en" ? ["Today I completed...", "I shipped...", "The result was..."] : ["오늘 완성한 결과는...", "직접 만들어낸 것은...", "이번에 달성한 기록은..."])
+              : (locale === "en" ? ["Today I worked on...", "The next thing I want to try is...", "One thing I learned was..."] : ["오늘 진행한 일은...", "다음으로 도전할 것은...", "오늘 새롭게 배운 것은..."])
+            ).map(example=><button key={example} className="btn secondary" type="button"
+              disabled={busy} onClick={()=>setBody(value=>value ? value+"\\n"+example : example)}>{example}</button>)}
+          </div>
           {previews.length > 0 && <div className="composer-image-previews">
             {previews.map((preview, i) => <div key={preview.url} className="composer-image-preview">
               {/* eslint-disable-next-line @next/next/no-img-element */}
