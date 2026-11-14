@@ -4,6 +4,7 @@ import { FeedPrompt } from "@/components/feed-prompt";
 import { RecordMedia } from "@/components/record-media";
 import { GettingStarted } from "@/components/getting-started";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { RecordSocialActions } from "@/components/record-social-actions";
 import { getLocale } from "@/lib/i18n-server";
 import { messagesFor } from "@/lib/i18n";
 
@@ -51,6 +52,16 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
     return score(b) - score(a);
   });
   const feed = ranked.slice(0, 30);
+  const feedIds = feed.map((r: {id:string}) => r.id);
+  const { data: reactions } = feedIds.length
+    ? await supabase.from("record_likes").select("record_id,user_id").in("record_id",feedIds)
+    : { data: [] as { record_id:string; user_id:string }[] };
+  const reactionCount = new Map<string, number>();
+  const reactedByMe = new Set<string>();
+  for (const reaction of reactions ?? []) {
+    reactionCount.set(reaction.record_id,(reactionCount.get(reaction.record_id) ?? 0)+1);
+    if(reaction.user_id===userId) reactedByMe.add(reaction.record_id);
+  }
 
   return (
     <>
@@ -88,7 +99,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <div className="post-copy">
             <p>{r.body}</p>
             <RecordMedia media={r.media} />
-            <Link href={`/record/${r.id}`} className="post-comment-link">{r.visibility === "public" ? t.home.viewComments : t.home.viewRecord} →</Link>
+            <RecordSocialActions recordId={r.id} userId={userId} locale={locale}
+              initiallyLiked={reactedByMe.has(r.id)} initialLikes={reactionCount.get(r.id) ?? 0}
+              commentsAllowed={r.visibility === "public"}/>
             {(r.goals?.title || r.teams?.name) && <div className="linked">
               {r.goals?.title && <span className="chip">Goal · {r.goals.title}</span>}
               {r.teams?.name && <Link href={`/team/${r.teams.id}`} className="chip chip-link">TEAM · {r.teams.name}</Link>}
