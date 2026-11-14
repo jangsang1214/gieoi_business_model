@@ -5,7 +5,8 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { getLocale } from "@/lib/i18n-server";
 import { messagesFor } from "@/lib/i18n";
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error: routeError } = await searchParams;
   const locale = await getLocale();
   const t = messagesFor(locale).auth;
   const supabase = await createClient();
@@ -35,7 +36,7 @@ export default async function LoginPage() {
             <h2>{t.welcome}</h2>
             <p>{t.subtitle}</p>
           </div>
-          <LoginForm locale={locale} />
+          <LoginForm locale={locale} authError={routeError === "confirm"} />
         </div>
       </section>
     </main>

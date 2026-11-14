@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +16,7 @@ function friendly(message: string, locale: Locale) {
   return t.generic;
 }
 
-export function LoginForm({ locale }: { locale: Locale }) {
+export function LoginForm({ locale, authError = false }: { locale: Locale; authError?: boolean }) {
   const t = messagesFor(locale).auth;
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
@@ -100,13 +101,15 @@ export function LoginForm({ locale }: { locale: Locale }) {
           </div>
         </label>
 
-        {msg && <div className={ok ? "success auth-message" : "error auth-message"}>{msg}</div>}
+        {authError && !msg && <p className="error auth-message" role="alert">{locale === "en" ? "This link expired or could not be verified. Request a new one." : "링크가 만료됐거나 인증하지 못했습니다. 새 링크를 요청해 주세요."}</p>}
+        {msg && <div role={ok ? "status" : "alert"} className={ok ? "success auth-message" : "error auth-message"}>{msg}</div>}
 
         <button className="auth-submit" disabled={loading}>
           {loading ? t.loading : mode === "login" ? t.login : t.signup}
         </button>
       </form>
 
+      {mode === "login" && <div className="auth-switch"><Link href="/forgot-password">{locale === "en" ? "Forgot password?" : "비밀번호를 잊으셨나요?"}</Link></div>}
       <div className="auth-switch">
         <span>{mode === "login" ? t.questionLogin : t.questionSignup}</span>
         <button type="button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>
@@ -114,7 +117,8 @@ export function LoginForm({ locale }: { locale: Locale }) {
         </button>
       </div>
 
-      <p className="auth-footnote">{t.footnote}</p>
+      <div className="auth-switch"><Link href="/about">{locale === "en" ? "What is prof.?" : "prof.는 어떤 서비스인가요?"}</Link></div>
+      <p className="auth-footnote">{locale === "en" ? "prof. is in beta. Our Terms and Privacy Policy are being finalized before public recruitment." : "프로프는 베타 서비스입니다. 공개 모집 전 이용약관과 개인정보 처리방침을 최종 정비하고 있습니다."}</p>
     </div>
   );
 }
