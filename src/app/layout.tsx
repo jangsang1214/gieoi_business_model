@@ -17,6 +17,7 @@ import "./v16.css";
 import "./v19.css";
 import "./i18n.css";
 import "./public.css";
+import "./social-privacy.css";
 import { getLocale } from "@/lib/i18n-server";
 
 const sans = Noto_Sans_KR({
