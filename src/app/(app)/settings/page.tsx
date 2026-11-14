@@ -26,6 +26,11 @@ export default async function SettingsPage() {
       </header>
       <section className="settings-card language-settings-card"><LocaleSwitcher locale={locale}/></section>
       <SettingsForm profile={profile} email={authData.user?.email ?? ""} locale={locale} />
+      <section className="settings-card">
+        <div className="settings-heading"><div><span>PRIVACY</span><h3>{locale === "en" ? "My data & account" : "내 데이터와 계정"}</h3></div></div>
+        <p className="meta">{locale === "en" ? "Download your data or request account deletion for review." : "내 데이터를 내려받거나 계정 삭제 검토를 요청할 수 있습니다."}</p>
+        <Link href="/settings/privacy" className="btn secondary">{locale === "en" ? "Manage personal data" : "개인정보 관리"}</Link>
+      </section>
       <section className="settings-card blocked-users-v15">
         <div className="settings-heading"><div><span>SAFETY</span><h3>{t.settings.blocked}</h3></div></div>
         {blocked?.length ? blocked.map((item)=> <div className="blocked-user-row" key={item.blocked_id}>
