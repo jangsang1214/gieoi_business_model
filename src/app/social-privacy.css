@@ -1,0 +1,22 @@
+/* Core privacy, first-time guidance, and feed reactions. */
+.privacy-actions{display:grid;gap:14px;padding:0 18px 26px}
+.privacy-actions h2{font-size:16px;font-weight:700;letter-spacing:-.03em;margin:0 0 12px}
+.privacy-actions .meta{line-height:1.75;margin:0 0 15px}
+.privacy-actions button{max-width:100%;white-space:normal}
+.privacy-deletion-card{border-color:#524035}
+.privacy-deletion-form{display:grid;gap:12px;max-width:460px}
+.privacy-deletion-form .field{margin:0}
+.record-social-actions{margin:14px 0 0}
+.record-social-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.record-social-row a,.record-social-row button{border:1px solid var(--pg-line,#34342e);background:transparent;color:var(--pg-muted,#bdbcb8);border-radius:9px;display:inline-flex;gap:8px;align-items:center;justify-content:center;min-height:36px;padding:7px 12px;font-size:12px;text-decoration:none;font-weight:500;cursor:pointer}
+.record-social-row button[aria-pressed="true"]{border-color:#8d6466;color:#edd4d3}
+.record-social-row button[aria-pressed="true"]>span:first-child{color:#d99298}
+.record-social-row button:focus-visible,.record-social-row a:focus-visible,.onboarding-examples button:focus-visible{outline:2px solid #f4f0eb;outline-offset:2px}
+.record-social-row button:disabled{opacity:.6;cursor:wait}
+.record-social-row span[aria-hidden="true"]{font-size:17px;line-height:1}
+.record-social-actions .error{display:block;font-size:11px;margin-top:6px}
+#comments{scroll-margin-top:96px}
+.onboarding-next-prompt{margin:6px 0 14px;max-width:58ch;color:var(--pg-muted,#bab9b4);font-size:12px;line-height:1.65}
+.onboarding-examples{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 16px}
+.onboarding-examples .btn{padding:7px 10px;border-radius:8px;min-height:34px;font-size:11px;white-space:normal;text-align:left}
+@media(max-width:640px){.privacy-actions{padding:0 14px 22px}.record-social-row{gap:6px}.record-social-row a,.record-social-row button{padding:7px 9px;font-size:11px}}
