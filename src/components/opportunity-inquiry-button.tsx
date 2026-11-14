@@ -3,19 +3,23 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { messagesFor, type Locale } from "@/lib/i18n";
 
 type Props = {
   userId: string;
   ownerId: string;
   opportunityId: string;
   opportunityTitle: string;
+  locale?: Locale;
 };
 
 /**
  * A private inquiry in the existing message-request workflow, not a formal
  * job application or an acceptance. The recipient can reply in Messages.
  */
-export function OpportunityInquiryButton({ userId, ownerId, opportunityId, opportunityTitle }: Props) {
+export function OpportunityInquiryButton({ userId, ownerId, opportunityId, opportunityTitle, locale = "ko" }: Props) {
+  const t = messagesFor(locale);
+  const o = t.opportunity;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -71,7 +75,7 @@ export function OpportunityInquiryButton({ userId, ownerId, opportunityId, oppor
       router.push(`/messages/${conversationId}`);
       router.refresh();
     } catch {
-      setError("문의 메시지를 보내지 못했어요. 잠시 후 다시 시도해 주세요.");
+      setError(o.inquiryError);
     } finally {
       setBusy(false);
     }
@@ -79,27 +83,27 @@ export function OpportunityInquiryButton({ userId, ownerId, opportunityId, oppor
 
   return <>
     <button type="button" className="btn primary" onClick={() => setOpen(true)}>
-      문의 메시지 보내기
+      {o.inquiry}
     </button>
     {open && <div className="overlay" onMouseDown={(event) => {
       if (event.target === event.currentTarget && !busy) setOpen(false);
     }}>
       <form className="sheet" onSubmit={send}>
         <div className="grab" />
-        <h2>기회에 대해 문의하기</h2>
+        <h2>{o.inquiryTitle}</h2>
         <p className="meta">{opportunityTitle}</p>
         <label className="field">
-          <span>등록자에게 보낼 메시지</span>
+          <span>{o.inquiryLabel}</span>
           <textarea required rows={5} value={note} maxLength={1000} disabled={busy}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="안녕하세요! 이 기회에 관심이 있어 연락드립니다. 제 활동과 질문을 소개해 주세요." />
+            placeholder={o.inquiryPlaceholder} />
         </label>
-        <p className="meta">문의는 메시지 요청함으로 전송됩니다. 공식 지원이나 선발 완료를 뜻하지 않습니다.</p>
+        <p className="meta">{o.inquiryHint}</p>
         {error && <div className="error notice" role="alert">{error}</div>}
         <div className="row">
-          <button type="button" className="btn secondary full" disabled={busy} onClick={() => setOpen(false)}>취소</button>
+          <button type="button" className="btn secondary full" disabled={busy} onClick={() => setOpen(false)}>{t.common.cancel}</button>
           <button type="submit" className="btn primary full" disabled={busy || !note.trim()}>
-            {busy ? "전송 중..." : "문의 전송"}
+            {busy ? t.common.sending : o.inquirySend}
           </button>
         </div>
       </form>

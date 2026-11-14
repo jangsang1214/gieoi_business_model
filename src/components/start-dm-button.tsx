@@ -3,8 +3,9 @@
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { Locale } from "@/lib/i18n";
 
-export function StartDmButton({ me, target }: { me: string; target: string }) {
+export function StartDmButton({ me, target, locale = "ko" }: { me: string; target: string; locale?: Locale }) {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
@@ -36,5 +37,5 @@ export function StartDmButton({ me, target }: { me: string; target: string }) {
     if (data?.id) router.push(`/messages/${data.id}`);
   }
 
-  return <button className="btn secondary" disabled={busy} onClick={start}>{busy ? "여는 중" : "메시지"}</button>;
+  return <button className="btn secondary" disabled={busy} onClick={start}>{busy ? (locale === "en" ? "Opening..." : "여는 중") : (locale === "en" ? "Message" : "메시지")}</button>;
 }

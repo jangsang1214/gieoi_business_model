@@ -4,6 +4,8 @@ import { RecordMedia } from "@/components/record-media";
 import { DiscoveryTracker } from "@/components/activity-tracker";
 import { ExploreEmpty } from "@/components/explore-empty";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { getLocale } from "@/lib/i18n-server";
+import { messagesFor } from "@/lib/i18n";
 
 const domains = ["business","workout","create","study","career","lifestyle"] as const;
 const kinds = ["record","proof","goal","team","person"] as const;
@@ -43,6 +45,9 @@ function timeScore(date:string) {
 
 export default async function ExplorePage({searchParams}:{searchParams:Promise<FilterParams>}) {
   const {supabase,userId}=await requireUser();
+  const locale = await getLocale();
+  const en = locale === "en";
+  const t = messagesFor(locale);
   const params=await searchParams;
   const q=safeText(String(params.q||""));
   const domain=domains.includes(params.domain as typeof domains[number]) ? String(params.domain) : "";
@@ -162,42 +167,42 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
   const filter={q,domain,kind,sort};
   return <div className="explore-page-v16">
     <header className="explore-head-v16">
-      <div><h1>탐색</h1><p>진행 중인 일, 사람, 함께할 팀을 발견하세요.</p></div>
-      <span className="explore-count-v16">{items.length ? `이번 페이지 ${items.length}개` : "EXPLORE"}</span>
+      <div><h1>{t.nav.explore}</h1><p>{en ? "Discover what people are building and the teams you can join." : "진행 중인 일, 사람, 함께할 팀을 발견하세요."}</p></div>
+      <span className="explore-count-v16">{items.length ? (en ? `${items.length} results on this page` : `이번 페이지 ${items.length}개`) : "EXPLORE"}</span>
     </header>
 
     <form className="explore-search explore-search-v8 explore-search-v16" action="/explore" method="get">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.2 4.2"/></svg>
-      <input name="q" maxLength={60} defaultValue={q} placeholder="사람, 기록, Goal, TEAM 검색" aria-label="탐색 검색"/>
+      <input name="q" maxLength={60} defaultValue={q} placeholder={en ? "Search people, updates, goals, teams" : "사람, 기록, Goal, TEAM 검색"} aria-label={t.common.search}/>
       {domain && <input type="hidden" name="domain" value={domain}/>}
       {kind && <input type="hidden" name="kind" value={kind}/>}
       {sort!=="relevant" && <input type="hidden" name="sort" value={sort}/>}
-      <button type="submit" className="explore-search-submit-v16">검색</button>
+      <button type="submit" className="explore-search-submit-v16">{t.common.search}</button>
     </form>
 
     <div className="explore-filter-stack explore-filter-v16">
-      <nav className="explore-kind-tabs" aria-label="탐색 유형">
+      <nav className="explore-kind-tabs" aria-label={en ? "Discover types" : "탐색 유형"}>
         {[
-          ["","모두"],["record","기록"],["person","사람"],["team","TEAM"],["goal","Goal"],["proof","Proof"],
+          ["",en ? "All" : "모두"],["record",en ? "Records" : "기록"],["person",t.common.people],["team","TEAM"],["goal","Goal"],["proof","Proof"],
         ].map(([value,label])=><Link key={value} className={kind===value?"active":""}
           href={exploreHref({...filter,kind:value,page:"1"})}>{label}</Link>)}
-        <Link href="/opportunity">기회</Link>
+        <Link href="/opportunity">{t.nav.opportunity}</Link>
       </nav>
       <div className="explore-secondary-filter-v16">
-        <nav className="explore-domain-tabs" aria-label="관심 분야">
-          <Link className={!domain?"active":""} href={exploreHref({...filter,domain:"",page:"1"})}>전체 분야</Link>
+        <nav className="explore-domain-tabs" aria-label={en ? "Categories" : "관심 분야"}>
+          <Link className={!domain?"active":""} href={exploreHref({...filter,domain:"",page:"1"})}>{en ? "All categories" : "전체 분야"}</Link>
           {domains.map(d=><Link key={d} className={domain===d?"active":""}
-            href={exploreHref({...filter,domain:d,page:"1"})}>{humanDomains[d]}</Link>)}
+            href={exploreHref({...filter,domain:d,page:"1"})}>{(t.domains as Record<string,string>)[d] ?? humanDomains[d]}</Link>)}
         </nav>
         <div className="explore-sort-v16">
-          <Link className={sort==="relevant"?"active":""} href={exploreHref({...filter,sort:"relevant",page:"1"})}>추천순</Link>
-          <Link className={sort==="recent"?"active":""} href={exploreHref({...filter,sort:"recent",page:"1"})}>최신순</Link>
+          <Link className={sort==="relevant"?"active":""} href={exploreHref({...filter,sort:"relevant",page:"1"})}>{en ? "Relevant" : "추천순"}</Link>
+          <Link className={sort==="recent"?"active":""} href={exploreHref({...filter,sort:"recent",page:"1"})}>{en ? "Newest" : "최신순"}</Link>
         </div>
       </div>
     </div>
 
     <DiscoveryTracker userId={userId}/>
-    {errors.length>0 && <div className="explore-error-v16" role="alert">일부 결과를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>}
+    {errors.length>0 && <div className="explore-error-v16" role="alert">{en ? "Some results could not be loaded. Please try again." : "일부 결과를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."}</div>}
     {items.length ? <div className="discovery-grid-v8 discovery-grid-v16">
       {items.map(item=>{
         const hasMedia=Array.isArray(item.media)&&item.media.length>0;
@@ -209,7 +214,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
           <Link href={item.href} className="discovery-tile-link" aria-label={item.title||excerpt(item.body,30)||"기록 열기"}>
             <div className="tile-topline">
               <span className="tile-kind">{item.kind==="record"?"RECORD":item.kind.toUpperCase()}</span>
-              <span>{humanDomains[item.domain]||"기타"}</span>
+              <span>{(t.domains as Record<string,string>)[item.domain] ?? t.domains.other}</span>
             </div>
             <RecordMedia media={item.media} variant="grid"/>
             <div className="tile-main">
@@ -228,12 +233,12 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
           </div>
         </article>;
       })}
-    </div> : <ExploreEmpty searched={Boolean(q||domain||kind||page>1)}/>}
+    </div> : <ExploreEmpty locale={locale} searched={Boolean(q||domain||kind||page>1)}/>}
 
-    {(hasMore||page>1)&&<nav className="explore-pager-v16" aria-label="탐색 페이지">
-      {page>1&&<Link href={exploreHref({...filter,page:String(page-1)})}>← 이전</Link>}
-      <span>{page} 페이지</span>
-      {hasMore&&<Link href={exploreHref({...filter,page:String(page+1)})}>더 발견하기 →</Link>}
+    {(hasMore||page>1)&&<nav className="explore-pager-v16" aria-label={en ? "Explore pages" : "탐색 페이지"}>
+      {page>1&&<Link href={exploreHref({...filter,page:String(page-1)})}>← {en ? "Previous" : "이전"}</Link>}
+      <span>{page} {en ? "page" : "페이지"}</span>
+      {hasMore&&<Link href={exploreHref({...filter,page:String(page+1)})}>{en ? "Discover more" : "더 발견하기"} →</Link>}
     </nav>}
   </div>;
 }

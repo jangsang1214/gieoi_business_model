@@ -1,3 +1,4 @@
+import { messagesFor, type Locale } from "./i18n";
 export const opportunityKinds = [
   { value: "job", label: "채용 · 인턴" },
   { value: "team", label: "TEAM 모집" },
@@ -21,12 +22,12 @@ export const opportunityDomains = [
 export type OpportunityKind = (typeof opportunityKinds)[number]["value"];
 export type OpportunityDomain = (typeof opportunityDomains)[number]["value"];
 
-export function opportunityKindLabel(value: string): string {
-  return opportunityKinds.find((entry) => entry.value === value)?.label ?? "기타 기회";
+export function opportunityKindLabel(value: string, locale: Locale = "ko"): string {
+  return (messagesFor(locale).kind as Record<string, string>)[value] ?? (locale === "ko" ? "기타 기회" : "Other opportunity");
 }
 
-export function opportunityDomainLabel(value: string): string {
-  return opportunityDomains.find((entry) => entry.value === value)?.label ?? "기타";
+export function opportunityDomainLabel(value: string, locale: Locale = "ko"): string {
+  return (messagesFor(locale).domains as Record<string, string>)[value] ?? messagesFor(locale).domains.other;
 }
 
 type DirectionSignals = {
@@ -46,7 +47,8 @@ type OpportunitySignals = {
  * incomplete evidence must never be interpreted as a poor person-match.
  * Do not expose private direction fields to other users or public metadata.
  */
-export function opportunityReasons(direction: DirectionSignals, opportunity: OpportunitySignals): string[] {
+export function opportunityReasons(direction: DirectionSignals, opportunity: OpportunitySignals, locale: Locale = "ko"): string[] {
+  const t = messagesFor(locale).match;
   if (!direction) return [];
   const norm = (value: string) => value.trim().toLowerCase();
   const matches = (mine: string[] | null | undefined, requested: string[] | null | undefined) => {
@@ -56,15 +58,15 @@ export function opportunityReasons(direction: DirectionSignals, opportunity: Opp
   const reasons: string[] = [];
   const sharedSkills = matches(direction.skill_tags, opportunity.required_skills);
   if (sharedSkills.length) {
-    reasons.push(`등록한 역량과 연결돼요 · ${sharedSkills.slice(0, 2).join(", ")}`);
+    reasons.push(`${t.skills} · ${sharedSkills.slice(0, 2).join(", ")}`);
   }
   if (matches(direction.future_tags, opportunity.desired_future_tags).length) {
-    reasons.push("앞으로 가고 싶은 방향이 비슷해요");
+    reasons.push(t.future);
   }
   if (opportunity.domain && (direction.preferred_domains ?? []).some(
     (domain) => norm(domain) === norm(opportunity.domain!)
   )) {
-    reasons.push("관심 분야가 일치해요");
+    reasons.push(t.domain);
   }
   return reasons;
 }

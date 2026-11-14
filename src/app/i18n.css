@@ -1,0 +1,16 @@
+/* Language switch: restrained and accessible in both app and auth layouts. */
+.locale-switcher{display:flex;flex-direction:column;gap:11px;min-width:0}
+.locale-description strong{font-size:13px;font-weight:700;color:var(--pg-text,#f5f4f0)}
+.locale-description p{color:var(--pg-muted,#8d8d8a);font-size:11px;line-height:1.55;margin:5px 0 0}
+.locale-options{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid var(--pg-line,#242424);border-radius:10px;width:max-content;max-width:100%;background:#111}
+.locale-options button{border:0;background:transparent;color:#b6b6b0;border-radius:7px;min-height:32px;padding:6px 10px;font-size:11px;white-space:nowrap}
+.locale-options button.active,.locale-options button[aria-pressed="true"]{background:#f1f0eb;color:#111;font-weight:750}
+.locale-options button:focus-visible{outline:2px solid #f1f0eb;outline-offset:2px}
+.locale-switcher.compact .locale-options{gap:1px;padding:2px}
+.locale-switcher.compact .locale-options button{padding:5px 7px;min-height:29px;font-size:10px}
+.desktop-rail>.locale-switcher{margin:12px 12px 0}
+.appbar-actions>.locale-switcher{margin-right:3px}
+.login-locale{display:flex;justify-content:flex-end;margin-bottom:14px}
+.language-settings-card{margin:0 18px 12px}
+@media(max-width:380px){.appbar-actions>.locale-switcher{margin-right:0}.locale-switcher.compact .locale-options button{padding:5px 5px;font-size:9px}.appbar-actions .icon-btn{width:33px}}
+@media(min-width:921px){.appbar-actions>.locale-switcher{display:none}}

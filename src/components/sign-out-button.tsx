@@ -2,8 +2,9 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import type { Locale } from "@/lib/i18n";
 
-export function SignOutButton() {
+export function SignOutButton({ locale = "ko" }: { locale?: Locale }) {
   const router = useRouter();
   return (
     <button
@@ -14,7 +15,7 @@ export function SignOutButton() {
         router.refresh();
       }}
     >
-      로그아웃
+      {locale === "en" ? "Sign out" : "로그아웃"}
     </button>
   );
 }

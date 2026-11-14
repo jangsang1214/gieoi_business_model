@@ -3,17 +3,20 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { messagesFor, type Locale } from "@/lib/i18n";
 
-function friendly(message: string) {
+function friendly(message: string, locale: Locale) {
+  const t = messagesFor(locale).auth;
   const text = message.toLowerCase();
-  if (text.includes("invalid login credentials")) return "이메일 또는 비밀번호를 다시 확인해주세요.";
-  if (text.includes("already registered")) return "이미 가입된 이메일입니다. 로그인으로 들어가주세요.";
-  if (text.includes("password")) return "비밀번호는 6자 이상으로 입력해주세요.";
-  if (text.includes("email")) return "사용할 수 있는 이메일 주소인지 확인해주세요.";
-  return "잠시 문제가 생겼습니다. 다시 시도해주세요.";
+  if (text.includes("invalid login credentials")) return t.invalid;
+  if (text.includes("already registered")) return t.registered;
+  if (text.includes("password")) return t.passwordError;
+  if (text.includes("email")) return t.emailError;
+  return t.generic;
 }
 
-export function LoginForm() {
+export function LoginForm({ locale }: { locale: Locale }) {
+  const t = messagesFor(locale).auth;
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +38,7 @@ export function LoginForm() {
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setMsg(friendly(error.message));
+      if (error) setMsg(friendly(error.message, locale));
       else {
         router.replace("/");
         router.refresh();
@@ -46,13 +49,13 @@ export function LoginForm() {
         password,
         options: { data: { display_name: name } },
       });
-      if (error) setMsg(friendly(error.message));
+      if (error) setMsg(friendly(error.message, locale));
       else if (data.session) {
         router.replace("/");
         router.refresh();
       } else {
         setOk(true);
-        setMsg("확인 메일을 보냈습니다. 메일의 링크를 누르면 프로프가 시작됩니다.");
+        setMsg(t.confirmation);
       }
     }
 
@@ -70,18 +73,18 @@ export function LoginForm() {
       <form onSubmit={submit} className="auth-form">
         {mode === "signup" && (
           <label className="auth-field">
-            <span>이름</span>
-            <input name="name" required autoComplete="name" placeholder="이름" />
+            <span>{t.name}</span>
+            <input name="name" required autoComplete="name" placeholder={t.name} />
           </label>
         )}
 
         <label className="auth-field">
-          <span>이메일</span>
-          <input name="email" type="email" inputMode="email" autoComplete="email" required placeholder="이메일" />
+          <span>{t.email}</span>
+          <input name="email" type="email" inputMode="email" autoComplete="email" required placeholder={t.email} />
         </label>
 
         <label className="auth-field">
-          <span>비밀번호</span>
+          <span>{t.password}</span>
           <div className="auth-password">
             <input
               name="password"
@@ -89,10 +92,10 @@ export function LoginForm() {
               minLength={6}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               required
-              placeholder="비밀번호"
+              placeholder={t.password}
             />
-            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>
-              {showPassword ? "숨기기" : "보기"}
+            <button type="button" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? t.hide : t.show}>
+              {showPassword ? t.hide : t.show}
             </button>
           </div>
         </label>
@@ -100,18 +103,18 @@ export function LoginForm() {
         {msg && <div className={ok ? "success auth-message" : "error auth-message"}>{msg}</div>}
 
         <button className="auth-submit" disabled={loading}>
-          {loading ? "확인 중..." : mode === "login" ? "로그인" : "계정 만들기"}
+          {loading ? t.loading : mode === "login" ? t.login : t.signup}
         </button>
       </form>
 
       <div className="auth-switch">
-        <span>{mode === "login" ? "프로프가 처음인가요?" : "이미 계정이 있나요?"}</span>
+        <span>{mode === "login" ? t.questionLogin : t.questionSignup}</span>
         <button type="button" onClick={() => changeMode(mode === "login" ? "signup" : "login")}>
-          {mode === "login" ? "가입하기" : "로그인"}
+          {mode === "login" ? t.join : t.login}
         </button>
       </div>
 
-      <p className="auth-footnote">계속하면 프로프의 이용약관 및 개인정보 처리방침에 동의하게 됩니다.</p>
+      <p className="auth-footnote">{t.footnote}</p>
     </div>
   );
 }

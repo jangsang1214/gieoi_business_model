@@ -4,11 +4,15 @@ import { FeedPrompt } from "@/components/feed-prompt";
 import { RecordMedia } from "@/components/record-media";
 import { GettingStarted } from "@/components/getting-started";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { getLocale } from "@/lib/i18n-server";
+import { messagesFor } from "@/lib/i18n";
 
 const domains = ["business", "workout", "create", "study", "career", "lifestyle"] as const;
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ domain?: string; feed?: string }> }) {
   const { supabase, userId } = await requireUser();
+  const locale = await getLocale();
+  const t = messagesFor(locale);
   const params = await searchParams;
   const selectedDomain = domains.includes(params.domain as (typeof domains)[number]) ? params.domain : null;
   const followingOnly = params.feed === "following";
@@ -51,24 +55,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
   return (
     <>
       <header className="utility-head feed-head">
-        <div><h1>홈</h1><p>지금 움직이는 것들.</p></div>
+        <div><h1>{t.home.title}</h1><p>{t.home.subtitle}</p></div>
         <span className="live-mark"><i /> LIVE</span>
       </header>
 
-      <FeedPrompt />
-      <GettingStarted hasDomain={Boolean(me?.primary_domains?.length)} hasGoal={Boolean(myGoals?.length)} hasRecord={Boolean(myRecordCount)} />
+      <FeedPrompt locale={locale} />
+      <GettingStarted locale={locale} hasDomain={Boolean(me?.primary_domains?.length)} hasGoal={Boolean(myGoals?.length)} hasRecord={Boolean(myRecordCount)} />
 
       <div className="tabs feed-tabs">
-        <Link href="/" className={`pill ${!followingOnly && !selectedDomain ? "active" : ""}`}>추천</Link>
-        <Link href="/?feed=following" className={`pill ${followingOnly ? "active" : ""}`}>팔로잉</Link>
+        <Link href="/" className={`pill ${!followingOnly && !selectedDomain ? "active" : ""}`}>{t.home.recommended}</Link>
+        <Link href="/?feed=following" className={`pill ${followingOnly ? "active" : ""}`}>{t.home.following}</Link>
         {domains.map((domain) => <Link key={domain} href={`/?domain=${domain}`} className={`pill ${selectedDomain === domain ? "active" : ""}`}>{domain.toUpperCase()}</Link>)}
       </div>
 
       {!feed.length ? (
         <div className="empty feed-empty">
-          <h3>{followingOnly ? "팔로잉 피드가 조용해요." : "아직 피드가 조용합니다."}</h3>
-          <p>{followingOnly ? "관심 있는 사람을 팔로우하면 기록을 이곳에서 볼 수 있어요." : "첫 기록을 남기거나 사람과 TEAM을 발견해보세요."}</p>
-          <Link href="/explore" className="inline-action">탐색 →</Link>
+          <h3>{followingOnly ? t.home.noFollowing : t.home.noPosts}</h3>
+          <p>{followingOnly ? t.home.followingHint : t.home.noPostsHint}</p>
+          <Link href="/explore" className="inline-action">{t.home.explore} →</Link>
         </div>
       ) : feed.map((r: any) => {
         const profileHref = r.author_id === userId ? "/profile" : `/profile/${r.author_id}`;
@@ -76,7 +80,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <div className="post-head">
             <Link href={profileHref} className="avatar-link"><ProfileAvatar userId={r.profiles?.avatar_url ? r.author_id : null} name={r.profiles?.display_name} version={r.profiles?.avatar_url}/></Link>
             <div className="grow">
-              <div className="post-user-line"><Link href={profileHref}><b>{r.profiles?.display_name || r.profiles?.handle || "프로프 사용자"}</b></Link>{r.profiles?.handle && <span>@{r.profiles.handle}</span>}</div>
+              <div className="post-user-line"><Link href={profileHref}><b>{r.profiles?.display_name || r.profiles?.handle || t.common.unknownUser}</b></Link>{r.profiles?.handle && <span>@{r.profiles.handle}</span>}</div>
               <div className="meta">{new Date(r.occurred_at).toLocaleDateString("ko-KR")}</div>
             </div>
             <div className="type-tag">{String(r.domain).toUpperCase()}{r.type === "proof" && <span>PROOF</span>}</div>
@@ -84,7 +88,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
           <div className="post-copy">
             <p>{r.body}</p>
             <RecordMedia media={r.media} />
-            <Link href={`/record/${r.id}`} className="post-comment-link">{r.visibility === "public" ? "댓글 · 기록 보기" : "기록 보기"} →</Link>
+            <Link href={`/record/${r.id}`} className="post-comment-link">{r.visibility === "public" ? t.home.viewComments : t.home.viewRecord} →</Link>
             {(r.goals?.title || r.teams?.name) && <div className="linked">
               {r.goals?.title && <span className="chip">Goal · {r.goals.title}</span>}
               {r.teams?.name && <Link href={`/team/${r.teams.id}`} className="chip chip-link">TEAM · {r.teams.name}</Link>}
