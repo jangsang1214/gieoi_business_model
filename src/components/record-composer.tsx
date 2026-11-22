@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { messagesFor, type Locale } from "@/lib/i18n";
@@ -12,7 +13,7 @@ const MAX_SIZE = 5 * 1024 * 1024;
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif",
 };
-type LinkOption = { id: string; title?: string; name?: string };
+type LinkOption = { id: string; title?: string; name?: string; domain?: string };
 type Preview = { url: string; name: string };
 
 export function RecordComposer({ userId, locale = "ko" }: { userId: string; locale?: Locale }) {
@@ -31,6 +32,9 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
   const [inputKey, setInputKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [incompleteProofRecordId, setIncompleteProofRecordId] = useState<string | null>(null);
+  const submitting = useRef(false);
+  const domainSelected = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -40,6 +44,7 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
       setType(detail?.type && types.includes(detail.type) ? detail.type : "journey");
       setGoalId(detail?.goalId || "");
       setTeamId(detail?.teamId || "");
+      setIncompleteProofRecordId(null);
       setOpen(true);
     };
     window.addEventListener("gieoi:compose", openComposer);
@@ -56,12 +61,19 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
     if (!open) return;
     const loadLinks = async () => {
       const supabase = createClient();
-      const [{ data: goalRows }, { data: memberships }] = await Promise.all([
-        supabase.from("goals").select("id,title").eq("owner_id", userId).eq("status", "active").order("created_at", { ascending: false }),
+      const [{ data: goalRows }, { data: memberships }, { data: profile }] = await Promise.all([
+        supabase.from("goals").select("id,title,domain").eq("owner_id", userId).eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("team_members").select("team_id,teams(id,name)").eq("user_id", userId).eq("status", "active"),
+        supabase.from("profiles").select("primary_domains").eq("id", userId).maybeSingle(),
       ]);
       setGoals(goalRows || []);
       setTeams((memberships || []).map((m: any) => m.teams).filter(Boolean));
+      // Default new records to the user's interests instead of BUSINESS.
+      if (!domainSelected.current) {
+        const selectedGoal = (goalRows || []).find(g => g.id === goalId);
+        const preferred = selectedGoal?.domain || profile?.primary_domains?.find((d: string) => domains.includes(d));
+        if (preferred && domains.includes(preferred)) setDomain(preferred);
+      }
     };
     void loadLinks();
   }, [open, userId]);
@@ -84,7 +96,8 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
   }
 
   async function submit() {
-    if ((!body.trim() && !files.length) || busy) return;
+    if ((!body.trim() && !files.length) || submitting.current || incompleteProofRecordId) return;
+    submitting.current = true;
     setBusy(true);
     setErr("");
     const supabase = createClient();
@@ -137,26 +150,45 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
       setFiles([]);
       setOpen(false);
       router.refresh();
-    } catch (e) {
+    } catch {
       if (recordInserted) {
-        // If the Proof step fails, leave the published Record intact and avoid deleting its images.
-        setErr(t.errorProof);
-        setFiles([]);
-        setBody("");
-        setOpen(true);
-        router.refresh();
+        // A PROOF-type record without a Proof is misleading. Attempt a
+        // compensating rollback and keep the user's draft for retry.
+        try {
+          const { data: removed, error: deleteError } = await supabase.from("records")
+            .delete().eq("id", recordId).eq("author_id", userId)
+            .select("id").maybeSingle();
+          if (deleteError || !removed) throw new Error("rollback-failed");
+          if (uploaded.length) await supabase.storage.from("record-media").remove(uploaded);
+          setErr(locale === "en"
+            ? "Proof could not be saved. Your draft is still here; please retry."
+            : "Proof를 저장하지 못했어요. 작성한 내용은 유지됐으니 다시 시도해 주세요.");
+        } catch {
+          // Do not falsely claim failure when the Record was already published.
+          setIncompleteProofRecordId(recordId);
+          setFiles([]);
+          setBody("");
+          setErr(locale === "en"
+            ? "The record was published but its Proof is incomplete. Review it before trying again."
+            : "기록은 게시됐지만 Proof 연결에 실패했어요. 다시 게시하기 전에 기존 기록을 확인해 주세요.");
+          router.refresh();
+        }
       } else {
-        if (uploaded.length) await supabase.storage.from("record-media").remove(uploaded);
-        setErr(e instanceof Error ? e.message : t.errorPost);
+        if (uploaded.length) {
+          try { await supabase.storage.from("record-media").remove(uploaded); }
+          catch { /* Manual cleanup can handle orphaned uploads if needed. */ }
+        }
+        setErr(t.errorPost);
       }
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
 
   return (
     <>
-      <button className="fab" onClick={() => { setType("journey"); setOpen(true); }} aria-label={t.new}>
+      <button className="fab" onClick={() => { setType("journey"); setIncompleteProofRecordId(null); setOpen(true); }} aria-label={t.new}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
       {open && <div className="overlay" onMouseDown={(e) => { if (e.currentTarget === e.target && !busy) setOpen(false); }}>
@@ -167,14 +199,14 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
             <button disabled={busy} className={type === "proof" ? "active" : ""} onClick={() => setType("proof")}>Proof</button>
           </div>
           <label className="field composer-body">{type === "proof" ? t.achieved : t.doing}
-            <textarea rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder={type === "proof" ? t.proofHint : t.journeyHint} disabled={busy}/>
+            <textarea rows={5} maxLength={5000} value={body} onChange={(e) => setBody(e.target.value)} placeholder={type === "proof" ? t.proofHint : t.journeyHint} disabled={busy}/>
           </label>
           <div className="onboarding-examples" aria-label={locale === "en" ? "Writing starters" : "기록 시작 문구"}>
             {(type === "proof"
               ? (locale === "en" ? ["Today I completed...", "I shipped...", "The result was..."] : ["오늘 완성한 결과는...", "직접 만들어낸 것은...", "이번에 달성한 기록은..."])
               : (locale === "en" ? ["Today I worked on...", "The next thing I want to try is...", "One thing I learned was..."] : ["오늘 진행한 일은...", "다음으로 도전할 것은...", "오늘 새롭게 배운 것은..."])
             ).map(example=><button key={example} className="btn secondary" type="button"
-              disabled={busy} onClick={()=>setBody(value=>value ? value+"\\n"+example : example)}>{example}</button>)}
+              disabled={busy} onClick={()=>setBody(value=>value ? value+"\n"+example : example)}>{example}</button>)}
           </div>
           {previews.length > 0 && <div className="composer-image-previews">
             {previews.map((preview, i) => <div key={preview.url} className="composer-image-preview">
@@ -187,7 +219,14 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
             <input key={inputKey} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={addFiles} disabled={busy || files.length >= MAX_IMAGES}/>
           </label>
           <div className="composer-links">
-            <label className="field compact-field">Goal <span className="optional">{t.optional}</span><select value={goalId} onChange={(e) => setGoalId(e.target.value)} disabled={busy}><option value="">{t.noLink}</option>{goals.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}</select></label>
+            <label className="field compact-field">Goal <span className="optional">{t.optional}</span><select value={goalId} onChange={(e) => {
+              setGoalId(e.target.value);
+              const selectedGoal = goals.find(g => g.id === e.target.value);
+              if (selectedGoal?.domain && domains.includes(selectedGoal.domain)) {
+                setDomain(selectedGoal.domain);
+                domainSelected.current = true;
+              }
+            }} disabled={busy}><option value="">{t.noLink}</option>{goals.map((g) => <option key={g.id} value={g.id}>{g.title}</option>)}</select></label>
             <label className="field compact-field">TEAM <span className="optional">{t.optional}</span><select value={teamId} onChange={(e) => { setTeamId(e.target.value); if (!e.target.value && visibility === "team") setVisibility("public"); }} disabled={busy}><option value="">{t.noLink}</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
           </div>
           <label className="field compact-field">{t.visibility}<select value={visibility} onChange={(e) => setVisibility(e.target.value)} disabled={busy}>
@@ -195,11 +234,14 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
             {teamId && <option value="team">{t.team}</option>}
             <option value="private">{t.private}</option>
           </select></label>
-          <label className="field compact-field">{t.domain}<select value={domain} onChange={(e) => setDomain(e.target.value)} disabled={busy}>{domains.map((x) => <option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label>
+          <label className="field compact-field">{t.domain}<select value={domain} onChange={(e) => { setDomain(e.target.value); domainSelected.current = true; }} disabled={busy}>{domains.map((x) => <option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label>
           {err && <div className="error notice" role="alert">{err}</div>}
+          {incompleteProofRecordId && <Link href={`/record/${incompleteProofRecordId}`} className="inline-action">
+            {locale === "en" ? "Review the published record" : "게시된 기록 확인"} →
+          </Link>}
           <div className="row composer-actions">
             <button className="btn secondary full" disabled={busy} onClick={() => setOpen(false)}>{messagesFor(locale).common.cancel}</button>
-            <button className="btn primary full" onClick={submit} disabled={busy || (!body.trim() && !files.length)}>{busy ? t.upload : messagesFor(locale).common.post}</button>
+            <button className="btn primary full" onClick={submit} disabled={busy || Boolean(incompleteProofRecordId) || (!body.trim() && !files.length)}>{busy ? t.upload : messagesFor(locale).common.post}</button>
           </div>
         </div>
       </div>}

@@ -6,6 +6,7 @@ import { ExploreEmpty } from "@/components/explore-empty";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { getLocale } from "@/lib/i18n-server";
 import { messagesFor } from "@/lib/i18n";
+import { personDiscoveryReason } from "@/lib/person-discovery-reason";
 
 const domains = ["business","workout","create","study","career","lifestyle"] as const;
 const kinds = ["record","proof","goal","team","person"] as const;
@@ -93,7 +94,8 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
     peopleQuery=peopleQuery.or(`display_name.ilike.${pattern},handle.ilike.${pattern},headline.ilike.${pattern},bio.ilike.${pattern}`);
   }
 
-  const wantPeople=kind==="person" || (!kind && Boolean(q));
+  // People should appear on first discovery visit, not only after a search.
+  const wantPeople=kind==="person" || !kind;
   const [recordsResult,proofsResult,goalsResult,teamsResult,peopleResult,settingsResult,followingResult]=await Promise.all([
     kind && kind!=="record" ? Promise.resolve({data:[] as any[],error:null}) : recordsQuery,
     kind && kind!=="proof" ? Promise.resolve({data:[] as any[],error:null}) : proofsQuery,
@@ -120,7 +122,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
     : {data:[] as any[]};
   const ownerMap=new Map((owners||[]).map((owner:any)=>[owner.id,owner]));
   const followed=new Set((followingResult.data||[]).map((f:any)=>f.following_id));
-  const interested=new Set(settingsResult.data?.primary_domains||[]);
+  const interested = new Set<string>((settingsResult.data?.primary_domains ?? []) as string[]);
 
   const items:DiscoveryItem[]=[
     ...records.map((r:any)=>({
@@ -150,7 +152,8 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
       id:p.id,kind:"person" as const,domain:p.primary_domains?.[0]||"people",date:p.created_at,
       title:p.display_name||p.handle||"프로프 사용자",body:p.headline||p.bio||"지금 하고 있는 일을 확인해 보세요.",
       href:`/profile/${p.id}`,authorId:p.id,authorName:p.display_name||p.handle||"프로프 사용자",
-      authorHandle:p.handle||null,authorAvatar:p.avatar_url||null,meta:"사람",
+      authorHandle:p.handle||null,authorAvatar:p.avatar_url||null,
+      meta:personDiscoveryReason([...interested],p.primary_domains||[],followed.has(p.id),locale),
     })),
   ];
 
