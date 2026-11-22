@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 
 const domains = new Set(["business", "workout", "create", "study", "career", "lifestyle"]);
 
-export function TeamCreator({ userId }: { userId: string }) {
+export function TeamCreator({ userId, locale = "ko" }: { userId: string; locale?: "ko" | "en" }) {
+  const en = locale === "en";
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +23,7 @@ export function TeamCreator({ userId }: { userId: string }) {
     const mission = String(fd.get("mission") ?? "").trim();
     const domain = String(fd.get("domain") ?? "");
     if (!name || !mission || name.length > 100 || mission.length > 2000 || !domains.has(domain)) {
-      setError("TEAM 이름, 분야, 목표를 다시 확인해 주세요.");
+      setError(en ? "Check the TEAM name, category and mission." : "TEAM 이름, 분야, 목표를 다시 확인해 주세요.");
       return;
     }
 
@@ -46,7 +47,7 @@ export function TeamCreator({ userId }: { userId: string }) {
           discoverable: false,
         }).select("id").single();
       if (createError || !created) {
-        setError("TEAM을 생성하지 못했습니다. 다시 시도해 주세요.");
+        setError(en ? "Could not create the TEAM. Please try again." : "TEAM을 생성하지 못했습니다. 다시 시도해 주세요.");
         return;
       }
       createdId = created.id;
@@ -75,12 +76,12 @@ export function TeamCreator({ userId }: { userId: string }) {
           .select("id").maybeSingle();
         if (cleanupError || !removed) {
           setPartialTeam(createdId);
-          setError("TEAM은 생성됐지만 초기 설정이 완료되지 않았습니다. TEAM 페이지에서 상태를 확인해 주세요.");
+          setError(en ? "The TEAM was created, but setup is incomplete. Review the TEAM page before trying again." : "TEAM은 생성됐지만 초기 설정이 완료되지 않았습니다. TEAM 페이지에서 상태를 확인해 주세요.");
         } else {
-          setError("TEAM 초기 설정에 실패해 불완전한 TEAM을 정리했어요. 다시 시도해 주세요.");
+          setError(en ? "TEAM setup failed, and the incomplete TEAM was removed. Please retry." : "TEAM 초기 설정에 실패해 불완전한 TEAM을 정리했어요. 다시 시도해 주세요.");
         }
       } else {
-        setError("연결에 문제가 생겼습니다. 다시 시도해 주세요.");
+        setError(en ? "Connection problem. Please try again." : "연결에 문제가 생겼습니다. 다시 시도해 주세요.");
       }
     } finally {
       setBusy(false);
@@ -90,15 +91,15 @@ export function TeamCreator({ userId }: { userId: string }) {
   return <>
     <button type="button" className="btn primary" onClick={() => {
       setError(""); setPartialTeam(null); setOpen(true);
-    }}>TEAM 만들기</button>
+    }}>{en ? "Create TEAM" : "TEAM 만들기"}</button>
     {open && <div className="overlay">
-      <form className="sheet team-create-v4" onSubmit={submit}>
+      <form className="sheet team-create-v4" onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="team-create-title">
         <div className="grab"/>
-        <h2>새 TEAM</h2>
-        <label className="field">이름
-          <input name="name" placeholder="TEAM 이름" required maxLength={100} disabled={busy}/>
+        <h2 id="team-create-title">{en ? "New TEAM" : "새 TEAM"}</h2>
+        <label className="field">{en ? "Name" : "이름"}
+          <input name="name" placeholder={en ? "TEAM name" : "TEAM 이름"} required maxLength={100} disabled={busy}/>
         </label>
-        <label className="field">분야
+        <label className="field">{en ? "Category" : "분야"}
           <select name="domain" disabled={busy}>
             <option value="business">BUSINESS</option>
             <option value="workout">WORKOUT</option>
@@ -108,21 +109,21 @@ export function TeamCreator({ userId }: { userId: string }) {
             <option value="lifestyle">LIFESTYLE</option>
           </select>
         </label>
-        <label className="field">무엇을 함께 해낼 건가요?
+        <label className="field">{en ? "What are you building together?" : "무엇을 함께 해낼 건가요?"}
           <textarea name="mission" rows={4} maxLength={2000} required disabled={busy}
-            placeholder="창업, 대회, 연구, 작품, 운동 목표 등 무엇이든"/>
+            placeholder={en ? "A project, a competition, research, an artwork or a training goal" : "창업, 대회, 연구, 작품, 운동 목표 등 무엇이든"}/>
         </label>
-        <label className="field">지금 단계 <span className="optional">선택</span>
+        <label className="field">{en ? "Current stage" : "지금 단계"} <span className="optional">{en ? "optional" : "선택"}</span>
           <input name="current_stage" maxLength={80} disabled={busy}
-            placeholder="예: 아이디어, 준비 중, MVP, 출전 준비"/>
+            placeholder={en ? "e.g. Idea, MVP, preparing to compete" : "예: 아이디어, 준비 중, MVP, 출전 준비"}/>
         </label>
         {error && <p className="error notice" role="alert">{error}</p>}
-        {partialTeam && <Link href={`/team/${partialTeam}`} className="inline-action">생성된 TEAM 확인 →</Link>}
+        {partialTeam && <Link href={`/team/${partialTeam}`} className="inline-action">{en ? "Review TEAM" : "생성된 TEAM 확인"} →</Link>}
         <div className="row">
           <button type="button" className="btn secondary full" disabled={busy}
-            onClick={() => setOpen(false)}>취소</button>
+            onClick={() => setOpen(false)}>{en ? "Cancel" : "취소"}</button>
           <button type="submit" className="btn primary full" disabled={busy}>
-            {busy ? "생성 중..." : "생성"}
+            {busy ? (en ? "Creating..." : "생성 중...") : (en ? "Create" : "생성")}
           </button>
         </div>
       </form>

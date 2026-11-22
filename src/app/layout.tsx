@@ -35,8 +35,8 @@ const serif = Noto_Serif_KR({
 });
 
 export const metadata: Metadata = {
-  title: "prof. — 살아온 방식으로 만나다",
-  description: "실제로 살아온 방향과 Proof로 사람, TEAM, 기회를 연결하는 네트워크",
+  title: "Prof. | 목표와 활동 기록, TEAM과 협업 기회",
+  description: "Prof.에서 Goal을 만들고 Journey와 Proof를 기록하세요. 사람을 찾고 TEAM을 모집하거나 프로젝트·채용·협업 기회에 지원할 수 있습니다.",
 };
 
 export const viewport: Viewport = {

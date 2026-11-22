@@ -4,9 +4,12 @@ import { TeamCreator } from "@/components/team-creator";
 import { TeamApplyButton } from "@/components/team-apply-button";
 import { RecommendationActions } from "@/components/recommendation-actions";
 import { directionMatch } from "@/lib/match";
+import { getLocale } from "@/lib/i18n-server";
 
 export default async function TeamPage() {
   const { supabase, userId } = await requireUser();
+  const locale = await getLocale();
+  const en = locale === "en";
   const [{ data: teams }, { data: mine }, { data: td }, { data: feedback }, { data: applications }] = await Promise.all([
     supabase.from("teams").select("id,name,mission,domain,current_stage,owner_id,team_members(count),team_roles(title,is_open)").eq("discoverable", true).limit(30),
     supabase.from("direction_profiles").select("*").eq("user_id", userId).maybeSingle(),
@@ -22,8 +25,10 @@ export default async function TeamPage() {
   const visibleTeams = (teams ?? []).filter((t: any) => fmap.get(t.id) !== "dismissed");
 
   return <>
-    <header className="utility-head team-head-simple"><div><h1>TEAM</h1><p>함께 해낼 사람들.</p></div><TeamCreator userId={userId} /></header>
-    {!visibleTeams.length ? <div className="empty"><h3>아직 TEAM이 없습니다.</h3><p>무엇을 함께 해낼지 정하면 TEAM을 만들 수 있습니다.</p></div> : visibleTeams.map((t: any) => {
+    <header className="utility-head team-head-simple"><div><h1>TEAM</h1><p>{en
+      ? "Create a TEAM, recruit members, apply to join others and review applications."
+      : "TEAM을 만들고 멤버를 모집하거나, 다른 TEAM에 가입 신청할 수 있습니다."}</p></div><TeamCreator userId={userId} locale={locale} /></header>
+    {!visibleTeams.length ? <div className="empty"><h3>{en ? "No TEAMs yet" : "아직 TEAM이 없습니다."}</h3><p>{en ? "Create a TEAM to describe your project and recruit members." : "새 TEAM을 만들어 프로젝트 목표를 소개하고 팀원을 모집해 보세요."}</p></div> : visibleTeams.map((t: any) => {
       const m = directionMatch(mine, tmap.get(t.id) ?? null);
       const openRoles = (t.team_roles || []).filter((r: any) => r.is_open).map((r: any) => r.title).slice(0, 3);
       return <article className="match-card" key={t.id}>

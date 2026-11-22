@@ -62,7 +62,7 @@ export async function GET() {
   ]));
 
   const archive = {
-    product: "prof.",
+    product: "Prof.",
     exported_at: new Date().toISOString(),
     account: { id: user.id, email: user.email ?? null, created_at: user.created_at },
     scope: "User-owned and user-authored rows readable by your account; max 1000 rows per category. This is not an exhaustive privacy data access report.",

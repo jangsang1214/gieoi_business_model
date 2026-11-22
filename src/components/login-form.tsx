@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { messagesFor, type Locale } from "@/lib/i18n";
@@ -20,6 +20,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
   const t = messagesFor(locale).auth;
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState(false);
@@ -27,40 +28,53 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setLoading(true);
     setMsg("");
     setOk(false);
 
-    const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email") || "").trim();
-    const password = String(fd.get("password") || "");
-    const name = String(fd.get("name") || "").trim();
-    const supabase = createClient();
-
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setMsg(friendly(error.message, locale));
-      else {
-        router.replace("/");
-        router.refresh();
+    try {
+      const fd = new FormData(e.currentTarget);
+      const email = String(fd.get("email") || "").trim();
+      const password = String(fd.get("password") || "");
+      const name = String(fd.get("name") || "").trim();
+      if (mode === "signup" && (password.length < 8 || password.length > 72)) {
+        setMsg(locale === "en"
+          ? "Choose a password between 8 and 72 characters."
+          : "계정을 만들려면 8~72자 비밀번호를 입력해 주세요.");
+        return;
       }
-    } else {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: name } },
-      });
-      if (error) setMsg(friendly(error.message, locale));
-      else if (data.session) {
-        router.replace("/");
-        router.refresh();
+      const supabase = createClient();
+
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) setMsg(friendly(error.message, locale));
+        else {
+          router.replace("/");
+          router.refresh();
+        }
       } else {
-        setOk(true);
-        setMsg(t.confirmation);
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { display_name: name } },
+        });
+        if (error) setMsg(friendly(error.message, locale));
+        else if (data.session) {
+          router.replace("/");
+          router.refresh();
+        } else {
+          setOk(true);
+          setMsg(t.confirmation);
+        }
       }
+    } catch {
+      setMsg(locale === "en" ? "Connection problem. Try again." : "연결에 문제가 생겼습니다. 다시 시도해 주세요.");
+    } finally {
+      submitting.current = false;
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   function changeMode(next: "login" | "signup") {
@@ -90,7 +104,8 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
             <input
               name="password"
               type={showPassword ? "text" : "password"}
-              minLength={6}
+              minLength={mode === "signup" ? 8 : 1}
+              maxLength={mode === "signup" ? 72 : undefined}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               required
               placeholder={t.password}
@@ -117,8 +132,8 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
         </button>
       </div>
 
-      <div className="auth-switch"><Link href="/about">{locale === "en" ? "What is prof.?" : "prof.는 어떤 서비스인가요?"}</Link></div>
-      <p className="auth-footnote">{locale === "en" ? "prof. is in beta. Our Terms and Privacy Policy are being finalized before public recruitment." : "프로프는 베타 서비스입니다. 공개 모집 전 이용약관과 개인정보 처리방침을 최종 정비하고 있습니다."}</p>
+      <div className="auth-switch"><Link href="/about">{locale === "en" ? "What is Prof.?" : "Prof.는 어떤 서비스인가요?"}</Link></div>
+      <p className="auth-footnote">{t.footnote}</p>
     </div>
   );
 }

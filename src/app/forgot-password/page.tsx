@@ -6,9 +6,9 @@ export default async function ForgotPasswordPage() {
   const locale = await getLocale();
   return <main className="login-shell login-shell-v16">
     <section className="login-story login-story-v16">
-      <div className="login-brand">prof.</div>
+      <div className="login-brand">Prof.</div>
       <div className="login-copy login-copy-v16">
-        <span className="eyebrow">PROF.</span>
+        <span className="eyebrow">Prof.</span>
         <h1>{locale === "en" ? "Get back to building." : "다시 이어서 쌓아가세요."}</h1>
         <p>{locale === "en" ? "Recover your account securely." : "계정을 안전하게 복구할 수 있어요."}</p>
       </div>
