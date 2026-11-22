@@ -122,7 +122,7 @@ export default async function ExplorePage({searchParams}:{searchParams:Promise<F
     : {data:[] as any[]};
   const ownerMap=new Map((owners||[]).map((owner:any)=>[owner.id,owner]));
   const followed=new Set((followingResult.data||[]).map((f:any)=>f.following_id));
-  const interested=new Set(settingsResult.data?.primary_domains||[]);
+  const interested = new Set<string>((settingsResult.data?.primary_domains ?? []) as string[]);
 
   const items:DiscoveryItem[]=[
     ...records.map((r:any)=>({
