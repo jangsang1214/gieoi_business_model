@@ -11,9 +11,9 @@ export default async function ResetPasswordPage() {
   const locale = await getLocale();
   return <main className="login-shell login-shell-v16">
     <section className="login-story login-story-v16">
-      <div className="login-brand">prof.</div>
+      <div className="login-brand">Prof.</div>
       <div className="login-copy login-copy-v16">
-        <span className="eyebrow">PROF.</span>
+        <span className="eyebrow">Prof.</span>
         <h1>{locale === "en" ? "Protect your next chapter." : "다음 기록을 위한 안전한 계정."}</h1>
         <p>{locale === "en" ? "Choose a new password to continue." : "새 비밀번호로 계정을 안전하게 이어가세요."}</p>
       </div>
