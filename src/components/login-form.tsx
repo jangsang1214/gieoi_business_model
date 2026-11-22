@@ -190,7 +190,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
           ? "If no email arrives, delivery may be restricted by the email provider or project settings. Contact the service administrator."
           : "메일이 계속 오지 않는다면 서버의 이메일 발송 제한 또는 SMTP 설정 문제일 수 있습니다."}</p>
       </section>}
-      <form onSubmit={submit} className="auth-form">
+      {!pendingEmail && <form onSubmit={submit} className="auth-form">
         {mode === "signup" && (
           <label className="auth-field">
             <span>{t.name}</span>
@@ -227,7 +227,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
         <button className="auth-submit" disabled={loading}>
           {loading ? t.loading : mode === "login" ? t.login : t.signup}
         </button>
-      </form>
+      </form>}
 
       {mode === "login" && <div className="auth-switch"><Link href="/forgot-password">{locale === "en" ? "Forgot password?" : "비밀번호를 잊으셨나요?"}</Link></div>}
       <div className="auth-switch">
