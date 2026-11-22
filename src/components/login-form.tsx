@@ -222,12 +222,12 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
         </label>
 
         {authError && !msg && <p className="error auth-message" role="alert">{locale === "en" ? "This link expired or could not be verified. Request a new one." : "링크가 만료됐거나 인증하지 못했습니다. 새 링크를 요청해 주세요."}</p>}
-        {msg && <div role={ok ? "status" : "alert"} className={ok ? "success auth-message" : "error auth-message"}>{msg}</div>}
 
         <button className="auth-submit" disabled={loading}>
           {loading ? t.loading : mode === "login" ? t.login : t.signup}
         </button>
       </form>}
+      {msg && <div role={ok ? "status" : "alert"} className={ok ? "success auth-message" : "error auth-message"}>{msg}</div>}
 
       {mode === "login" && <div className="auth-switch"><Link href="/forgot-password">{locale === "en" ? "Forgot password?" : "비밀번호를 잊으셨나요?"}</Link></div>}
       <div className="auth-switch">
