@@ -5,6 +5,7 @@ import { FormEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { messagesFor, type Locale } from "@/lib/i18n";
+import { canResendConfirmation, isSixDigitEmailCode } from "@/lib/email-verification";
 
 function friendly(message: string, locale: Locale) {
   const t = messagesFor(locale).auth;
@@ -18,6 +19,9 @@ function friendly(message: string, locale: Locale) {
     return locale === "en"
       ? "The email service is unavailable. Check back later or contact the service administrator."
       : "인증 메일 발송 서비스를 사용할 수 없습니다. 관리자에게 발송 설정 확인을 요청해 주세요.";
+  }
+  if (text.includes("email not confirmed")) {
+    return locale === "en" ? "Confirm your email to finish signing up." : "로그인하려면 이메일 인증을 먼저 완료해 주세요.";
   }
   if (text.includes("invalid login credentials")) return t.invalid;
   if (text.includes("already registered")) return t.registered;
@@ -39,6 +43,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const lastResendAt = useRef(0);
+  const resendInFlight = useRef(false);
   const router = useRouter();
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -64,8 +69,13 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
 
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) setMsg(friendly(error.message, locale));
-        else {
+        if (error) {
+          if (error.message.toLowerCase().includes("email not confirmed")) {
+            setPendingEmail(email);
+            setVerificationCode("");
+          }
+          setMsg(friendly(error.message, locale));
+        } else {
           router.replace("/");
           router.refresh();
         }
@@ -82,6 +92,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
         } else {
           setPendingEmail(email);
           setVerificationCode("");
+          lastResendAt.current = Date.now();
           setOk(true);
           setMsg(locale === "en"
             ? "Sign-up was accepted. Check your inbox and spam folder for a confirmation link or a 6-digit code. If nothing arrives, check the email service settings."
@@ -97,7 +108,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
   }
 
   async function verifyEmailCode() {
-    if (verifying || !pendingEmail || !/^\\d{6}$/.test(verificationCode)) return;
+    if (verifying || !pendingEmail || !isSixDigitEmailCode(verificationCode)) return;
     setVerifying(true);
     setMsg("");
     setOk(false);
@@ -129,13 +140,14 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
   }
 
   async function resendConfirmation() {
-    if (!pendingEmail || resending) return;
+    if (!pendingEmail || resendInFlight.current) return;
     const now = Date.now();
-    if (now - lastResendAt.current < 60_000) {
+    if (!canResendConfirmation(lastResendAt.current, now)) {
       setOk(false);
       setMsg(locale === "en" ? "Please wait 60 seconds between email requests." : "인증 메일은 60초 간격으로 다시 요청할 수 있어요.");
       return;
     }
+    resendInFlight.current = true;
     setResending(true);
     setMsg("");
     try {
@@ -154,6 +166,7 @@ export function LoginForm({ locale, authError = false }: { locale: Locale; authE
       setOk(false);
       setMsg(locale === "en" ? "Connection problem. Try again." : "연결에 문제가 생겼어요. 다시 시도해 주세요.");
     } finally {
+      resendInFlight.current = false;
       setResending(false);
     }
   }
