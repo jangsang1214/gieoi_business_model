@@ -3,9 +3,9 @@
 ## Current diagnosis
 
 The linked Supabase project `gieoi` (`vujsypswodybgrslhpqv`) was reported
-`INACTIVE` on 2026-11-23. A restore request succeeded, but the latest
-observed state while this change was written was `COMING_UP`; the exact
-`ACTIVE_HEALTHY` state must be confirmed separately.
+`INACTIVE` on 2026-11-23. A restore request succeeded, and a subsequent connector check confirmed
+`ACTIVE_HEALTHY`. This resolves the project inactivity blocker, but still
+does not verify SMTP delivery to a real inbox.
 
 A successful `signUp()` response does **not** prove that mail reached the
 recipient's inbox. Supabase's default email service is restricted and
