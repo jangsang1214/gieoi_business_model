@@ -35,3 +35,25 @@
 .public-page .locale-options{border-color:#4a4943}
 .public-page a:focus-visible{outline:2px solid #f1f0eb;outline-offset:3px}
 @media(max-width:700px){.public-top{padding:20px;min-height:70px}.public-brand{font-size:29px}.public-header-actions{gap:12px}.public-hero{padding:78px 20px 85px}.public-hero h1{font-size:clamp(46px,11vw,72px)}.public-section{padding:60px 20px}.public-stage-grid{grid-template-columns:1fr}.public-stage{min-height:0;padding:26px}.public-stage h3{margin:22px 0 8px}.public-connections{grid-template-columns:1fr;gap:26px}.public-last{padding:74px 20px}.public-footer{flex-direction:column;padding:25px 20px}}
+
+/* Small-screen readability for concrete service information */
+.public-stage-grid{align-items:stretch}
+.public-stage{min-width:0}
+.public-stage p,.public-intro,.public-connections p{overflow-wrap:anywhere}
+.public-scenario h3{margin-top:0}
+.public-scenario{min-height:185px}
+.public-hero .public-kicker{line-height:1.9;overflow-wrap:anywhere}
+.public-page .public-primary,.public-page .public-secondary{min-height:44px}
+@media(max-width:440px){
+ .public-top{padding:16px 18px;flex-wrap:wrap;row-gap:10px}
+ .public-header-actions{flex-wrap:wrap;justify-content:flex-end}
+ .public-hero{padding:58px 18px 68px}
+ .public-hero h1{font-size:clamp(36px,10.5vw,54px);letter-spacing:-.065em}
+ .public-hero-actions{display:grid;grid-template-columns:1fr}
+ .public-hero-actions>*{width:100%}
+ .public-stage-grid{grid-template-columns:minmax(0,1fr)}
+ .public-stage{padding:24px 20px}
+ .public-scenario{min-height:unset}
+ .public-section{padding:50px 18px}
+ .public-footer{padding:24px 18px}
+}
