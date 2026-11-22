@@ -14,7 +14,7 @@ export default async function PrivacySettings() {
     <header className="utility-head">
       <div><Link href="/settings" className="meta">← {en ? "Settings" : "설정"}</Link>
         <h1>{en ? "Privacy & account data" : "개인정보 및 계정 데이터"}</h1>
-        <p>{en ? "Review and manage information you have provided to prof." : "prof.에 기록한 데이터를 관리할 수 있어요."}</p>
+        <p>{en ? "Review and manage information you have provided to Prof." : "Prof.에 기록한 데이터를 관리할 수 있어요."}</p>
       </div>
     </header>
     <AccountPrivacyActions locale={locale} pending={Boolean(pending)}/>
