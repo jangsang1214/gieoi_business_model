@@ -45,7 +45,7 @@ export function RecordSocialActions({ recordId, userId, initiallyLiked, initialL
     const url = new URL(`/record/${recordId}`, window.location.origin).href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "prof. · Record", url });
+        await navigator.share({ title: "Prof. · Record", url });
       } else if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url);
         setCopied(true);
