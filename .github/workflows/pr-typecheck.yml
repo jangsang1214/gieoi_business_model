@@ -1,7 +1,7 @@
 name: PR Typecheck
 on:
   push:
-    branches: [main, feat/pr19-social-essentials]
+    branches: [main, "feat/**", "fix/**"]
   pull_request:
     branches: [main]
 permissions:
