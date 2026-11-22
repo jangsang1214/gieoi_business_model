@@ -62,6 +62,16 @@ try {
   });
   assert.equal(locale.status, 200, "valid language switch must work");
   assert.match(locale.headers.get("set-cookie") ?? "", /en/, "chosen language must be persisted");
+  const koreanPage = await request("/about", { headers: { "Accept-Language": "ko-KR,ko;q=0.9" } });
+  assert.equal(koreanPage.status, 200);
+  assert.match(await koreanPage.text(), /Prof\.에서 실제로 할 수 있는 일/, "Korean feature details should be visible");
+
+  const savedCookie = (locale.headers.get("set-cookie") ?? "").split(";")[0];
+  const englishPage = await request("/about", { headers: { Cookie: savedCookie, "Accept-Language": "ko-KR" } });
+  assert.equal(englishPage.status, 200);
+  assert.match(await englishPage.text(), /Six things you can actually do/, "English preference should override browser language");
+  console.log("PASS: English and Korean product descriptions");
+
   console.log("PASS: language preference validation and origin check");
 
   const exportResponse = await request("/api/account/export");
