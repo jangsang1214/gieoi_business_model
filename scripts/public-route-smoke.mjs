@@ -7,7 +7,7 @@ import { spawn } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 
 const port = "32717";
-const base = `http://127.0.0.1:${port}`;
+const base = `http://localhost:${port}`;
 const server = spawn(process.execPath, ["./node_modules/next/dist/bin/next", "start", "-p", port], {
   cwd: process.cwd(),
   env: {
