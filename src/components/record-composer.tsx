@@ -44,6 +44,7 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
       setType(detail?.type && types.includes(detail.type) ? detail.type : "journey");
       setGoalId(detail?.goalId || "");
       setTeamId(detail?.teamId || "");
+      setIncompleteProofRecordId(null);
       setOpen(true);
     };
     window.addEventListener("gieoi:compose", openComposer);
@@ -149,17 +150,35 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
       setFiles([]);
       setOpen(false);
       router.refresh();
-    } catch (e) {
+    } catch {
       if (recordInserted) {
-        // If the Proof step fails, leave the published Record intact and avoid deleting its images.
-        setErr(t.errorProof);
-        setFiles([]);
-        setBody("");
-        setOpen(true);
-        router.refresh();
+        // A PROOF-type record without a Proof is misleading. Attempt a
+        // compensating rollback and keep the user's draft for retry.
+        try {
+          const { data: removed, error: deleteError } = await supabase.from("records")
+            .delete().eq("id", recordId).eq("author_id", userId)
+            .select("id").maybeSingle();
+          if (deleteError || !removed) throw new Error("rollback-failed");
+          if (uploaded.length) await supabase.storage.from("record-media").remove(uploaded);
+          setErr(locale === "en"
+            ? "Proof could not be saved. Your draft is still here; please retry."
+            : "Proof를 저장하지 못했어요. 작성한 내용은 유지됐으니 다시 시도해 주세요.");
+        } catch {
+          // Do not falsely claim failure when the Record was already published.
+          setIncompleteProofRecordId(recordId);
+          setFiles([]);
+          setBody("");
+          setErr(locale === "en"
+            ? "The record was published but its Proof is incomplete. Review it before trying again."
+            : "기록은 게시됐지만 Proof 연결에 실패했어요. 다시 게시하기 전에 기존 기록을 확인해 주세요.");
+          router.refresh();
+        }
       } else {
-        if (uploaded.length) await supabase.storage.from("record-media").remove(uploaded);
-        setErr(e instanceof Error ? e.message : t.errorPost);
+        if (uploaded.length) {
+          try { await supabase.storage.from("record-media").remove(uploaded); }
+          catch { /* Manual cleanup can handle orphaned uploads if needed. */ }
+        }
+        setErr(t.errorPost);
       }
     } finally {
       submitting.current = false;
@@ -169,7 +188,7 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
 
   return (
     <>
-      <button className="fab" onClick={() => { setType("journey"); setOpen(true); }} aria-label={t.new}>
+      <button className="fab" onClick={() => { setType("journey"); setIncompleteProofRecordId(null); setOpen(true); }} aria-label={t.new}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
       {open && <div className="overlay" onMouseDown={(e) => { if (e.currentTarget === e.target && !busy) setOpen(false); }}>
@@ -217,9 +236,12 @@ export function RecordComposer({ userId, locale = "ko" }: { userId: string; loca
           </select></label>
           <label className="field compact-field">{t.domain}<select value={domain} onChange={(e) => { setDomain(e.target.value); domainSelected.current = true; }} disabled={busy}>{domains.map((x) => <option key={x} value={x}>{x.toUpperCase()}</option>)}</select></label>
           {err && <div className="error notice" role="alert">{err}</div>}
+          {incompleteProofRecordId && <Link href={`/record/${incompleteProofRecordId}`} className="inline-action">
+            {locale === "en" ? "Review the published record" : "게시된 기록 확인"} →
+          </Link>}
           <div className="row composer-actions">
             <button className="btn secondary full" disabled={busy} onClick={() => setOpen(false)}>{messagesFor(locale).common.cancel}</button>
-            <button className="btn primary full" onClick={submit} disabled={busy || (!body.trim() && !files.length)}>{busy ? t.upload : messagesFor(locale).common.post}</button>
+            <button className="btn primary full" onClick={submit} disabled={busy || Boolean(incompleteProofRecordId) || (!body.trim() && !files.length)}>{busy ? t.upload : messagesFor(locale).common.post}</button>
           </div>
         </div>
       </div>}
