@@ -11,7 +11,7 @@ export function AppShell({ children, userId, unreadCount = 0, locale }: { childr
     <div className="app-frame">
       <NotificationRealtime userId={userId} />
       <aside className="desktop-rail">
-        <Link href="/" className="rail-brand" aria-label={`prof. ${t.nav.home}`}>prof.</Link>
+        <Link href="/" className="rail-brand" aria-label={`Prof. ${t.nav.home}`}>Prof.</Link>
         <DesktopNav locale={locale} />
         <LocaleSwitcher locale={locale} compact />
         <p className="rail-note">Proof of Trajectory.<br />{t.nav.note}</p>
@@ -19,7 +19,7 @@ export function AppShell({ children, userId, unreadCount = 0, locale }: { childr
 
       <div className="shell-main">
         <header className="appbar">
-          <Link href="/" className="brand" aria-label="prof. 홈">prof.</Link>
+          <Link href="/" className="brand" aria-label="Prof. 홈">Prof.</Link>
           <div className="appbar-actions">
             <LocaleSwitcher locale={locale} compact />
             <Link href="/notifications" className="icon-btn notification-icon-link" aria-label={unreadCount ? `${t.nav.notifications} ${unreadCount}` : t.nav.notifications}>
