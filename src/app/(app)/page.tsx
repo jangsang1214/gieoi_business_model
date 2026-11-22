@@ -64,7 +64,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
       </header>
 
       <FeedPrompt locale={locale} />
-      <GettingStarted locale={locale} hasDomain={Boolean(me?.primary_domains?.length)} hasGoal={Boolean(myGoals?.length)} hasRecord={Boolean(myRecordCount)} />
+      <GettingStarted locale={locale} hasDomain={Boolean(me?.primary_domains?.length)} hasGoal={Boolean(myGoals?.length)} hasRecord={Boolean(myRecordCount)} hasFollowing={Boolean(following?.length)} />
 
       <div className="tabs feed-tabs">
         <Link href="/" className={`pill ${!followingOnly && !selectedDomain ? "active" : ""}`}>{t.home.recommended}</Link>
