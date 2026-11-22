@@ -20,3 +20,17 @@
 .onboarding-examples{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 16px}
 .onboarding-examples .btn{padding:7px 10px;border-radius:8px;min-height:34px;font-size:11px;white-space:normal;text-align:left}
 @media(max-width:640px){.privacy-actions{padding:0 14px 22px}.record-social-row{gap:6px}.record-social-row a,.record-social-row button{padding:7px 9px;font-size:11px}}
+
+/* Signup verification and a single clear next action for new members. */
+.auth-verification{display:grid;gap:12px;margin:0 0 22px;padding:18px;border:1px solid var(--pg-line,#393935);border-radius:12px;background:rgba(255,255,255,.025)}
+.auth-verification h3{font-size:16px;line-height:1.4;margin:0}
+.auth-verification .auth-field{margin:0}
+.auth-verification-hint{margin:0;color:var(--pg-muted,#bdbbb5);font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.auth-verification-actions{display:grid;gap:9px}
+.auth-verification-actions .auth-submit,.auth-verification-actions .btn{width:100%;min-height:44px}
+.auth-verification-actions button:focus-visible,.getting-started-next :focus-visible,.getting-started-discover a:focus-visible{outline:2px solid #f4f1e9;outline-offset:3px}
+.getting-started-next{display:flex;margin:8px 0 18px}
+.getting-started-next .inline-action{display:inline-flex;align-items:center;min-height:44px;padding:10px 16px;border:1px solid #77766e;border-radius:9px;background:#eceae2;color:#151514;font-weight:650;text-decoration:none;cursor:pointer}
+.getting-started-discover{font-size:12px;line-height:1.6;margin:12px 0 0}
+.getting-started-discover a{color:inherit;text-underline-offset:3px}
+@media(max-width:520px){.auth-verification{padding:14px}.getting-started-next .inline-action{width:100%;justify-content:center}}
