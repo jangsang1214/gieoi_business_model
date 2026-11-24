@@ -61,6 +61,7 @@ export default async function AboutPage() {
       <div className="public-hero-actions">
         <Link href="/login" className="public-primary">{en ? "Start using Prof." : "Prof. 시작하기"}</Link>
         <a href="#how-it-works" className="public-secondary">{en ? "See what you can do" : "기능 자세히 보기"}</a>
+        <Link href="/for-teams" className="public-secondary">{en ? "For TEAM organizers" : "팀 운영자라면"}</Link>
       </div>
       <p className="public-helper">{en
         ? "Early beta · Member-created information is not automatically authenticated or fact-checked."
