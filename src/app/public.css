@@ -57,3 +57,11 @@
  .public-section{padding:50px 18px}
  .public-footer{padding:24px 18px}
 }
+
+/* Team organizer pilot: built from the existing public visual system. */
+.team-business-hero .public-intro{max-width:780px}
+.team-business-pricing{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.team-business-pricing .public-stage{min-width:0}
+.team-business-pricing .public-stage h3{margin:18px 0 12px}
+.team-business-pricing .public-stage p{overflow-wrap:anywhere}
+@media(max-width:700px){.team-business-pricing{grid-template-columns:1fr}}
